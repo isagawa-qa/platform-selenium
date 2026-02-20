@@ -1,0 +1,12 @@
+{
+  "john_demo": {
+    "username": "john",
+    "password": "demo"
+  },
+  "twenty_demo": {
+    "email": "testuser@example.com",
+    "password": "YourPasswordHere",
+    "workspace": "Testing WS",
+    "workspace_url": "https://your-workspace.example.com"
+  }
+}

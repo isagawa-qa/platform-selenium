@@ -1,0 +1,11 @@
+{
+  "DEFAULT": {
+    "url": "http://www.automationpractice.pl/index.php"
+  },
+  "parabank": {
+    "url": "https://parabank.parasoft.com"
+  },
+  "twentyDemo": {
+    "url": "https://your-crm-instance.example.com"
+  }
+}

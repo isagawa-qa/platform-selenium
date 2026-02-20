@@ -1,0 +1,5 @@
+selenium>=4.15.0
+webdriver-manager>=4.0.0
+pytest>=7.4.0
+pytest-html>=4.1.0
+faker>=20.0.0
