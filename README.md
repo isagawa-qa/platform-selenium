@@ -190,7 +190,7 @@ This is AI you can actually delegate QA to.
 
 ## Services
 
-We deliver a highly scalable, maintainable, enterprise-grade test automation framework powered by an AI agent managed by our own enforcement kernel. We build the entire test solution — login credentials, data management, environment configuration, CI/CD integration, and reporting. Your team owns the entire tech stack: a true AI-native test automation framework built on Claude Code. We also train your team to create and maintain test scripts on their own.
+We deliver a highly scalable, maintainable, enterprise-grade test automation framework powered by an AI agent managed by our own enforcement kernel. We build the entire test solution — login credentials, data management, environment configuration, and page object architecture. Your team owns the entire tech stack: a true AI-native test automation framework built on Claude Code. We also train your team to create and maintain test scripts on their own.
 
 ### What We Deliver
 
@@ -199,28 +199,22 @@ Depending on your needs, the full solution can include:
 - Login/auth credential management
 - Test data management
 - Environment configuration
-- CI/CD pipeline integration
-- Test reporting & dashboards
 - Page object architecture
-- API test coverage
-- Cross-browser/cross-device setup
 
-### Free Demo — The Proof
+### Demo
 
-We'll build working tests on **YOUR** site in 60 minutes. You keep the code whether you hire us or not.
+We'll build working tests on **YOUR** site in 60 minutes. No discovery phase. No proposal. No waiting.
 
-No discovery phase. No proposal. No waiting.
-
-**[Book a free demo →](https://github.com/isagawa-qa/platform/discussions)**
+**[Book a demo →](https://github.com/isagawa-qa/platform/discussions)**
 
 ### Pricing
 
 | Offering | What's Included | Price |
 |----------|----------------|-------|
-| **Free Demo** | Live 60-min session on your site. Working tests you keep. | $0 |
-| **Implementation** | Full QA infrastructure: framework setup, credential management, environment config, CI/CD integration, test coverage, team training | $15,000 - $50,000 |
+| **Demo** | Live 60-min session on your site | Contact us |
+| **Implementation** | Full QA infrastructure: framework setup, credential management, environment config, team training | $15,000 - $50,000 |
 | **Retainer** | Ongoing test development, maintenance, new workflow coverage, priority support | $1,000 - $3,000/month |
-| **Enterprise** | Full implementation, compliance docs, cross-browser/device setup, dedicated support | Custom ($50K+) |
+| **Enterprise** | Full implementation, compliance docs, dedicated support | Custom ($50K+) |
 
 ---
 
