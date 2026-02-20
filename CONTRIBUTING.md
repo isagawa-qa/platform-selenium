@@ -6,25 +6,7 @@ Thank you for your interest in contributing.
 
 This project uses a **5-layer architecture**: Test > Role > Task > Page Object > WebInterface (BrowserInterface).
 
-Before writing any code, read the reference implementations in `framework/_reference/`:
-
-| Layer | Reference File | Pattern |
-|-------|---------------|---------|
-| Page Object | `pages/inquiry_form_page.py` | Locators as class constants, atomic methods, return `self` |
-| Task | `tasks/reference_tasks.py` | `@autologger`, POM composition, no return values |
-| Role | `roles/reference_role.py` | `@autologger`, Task composition, workflow orchestration |
-| Test | `tests/test_reference_workflow.py` | AAA pattern, fixtures, one Role call per test |
-
-See `docs/architecture.md` for the full explanation of the 5-layer pattern and the 28 Design Decisions.
-
-## Key Rules
-
-- **No locators** in Tasks or Roles — only in Page Objects
-- **No return values** from Tasks or Roles
-- **Return `self`** from POM atomic methods (fluent chaining)
-- **Assert via POM state-check methods** in Tests
-- **One Role workflow call** per test
-- **`@autologger`** decorator on all Task, Role, and Test methods
+Before writing any code, read the reference implementations in `framework/_reference/`.
 
 ## Development Setup
 

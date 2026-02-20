@@ -55,21 +55,14 @@ Test (Arrange / Act / Assert)
 - Tests orchestrate Roles to execute business workflows — multi-role workflows are supported
 - `@autologger` decorator on every Task, Role, and Test method
 
-See [docs/architecture.md](docs/architecture.md) for the full explanation and all 28 Design Decisions.
-
 ---
 
 ## How It Works
 
-The AI follows a gated workflow to generate tests:
-
-1. **User Input** — describe the persona, URL, and workflow to test
-2. **Pre-flight** — credential strategy and browser session setup
-3. **AI Processing** — BDD scenarios, expected states, intent extraction
-4. **Construction** — element discovery, code generation following the 5-layer architecture
-5. **Execution** — run the test, human-in-the-loop triage on failure
-
-On **any** failure, the agent stops and asks. No autonomous looping. Every fix makes the system permanently smarter — the same mistake cannot happen again.
+1. Describe the persona, URL, and workflow you want to test
+2. The AI discovers page elements and generates code following the 5-layer architecture
+3. Tests are executed with human-in-the-loop triage on failure
+4. Every fix makes the system permanently smarter — the same mistake cannot happen again
 
 ---
 
