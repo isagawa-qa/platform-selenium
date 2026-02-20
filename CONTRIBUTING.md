@@ -6,6 +6,22 @@ Thank you for your interest in contributing.
 
 This project uses a **5-layer architecture**: Test > Role > Task > Page Object > WebInterface (BrowserInterface).
 
+| Layer | Responsibility |
+|-------|---------------|
+| **Test** | Orchestrates Roles, asserts results via POM state-check methods |
+| **Role** | Coordinates Tasks into business workflows (user persona) |
+| **Task** | Performs one domain operation, composes Page Objects |
+| **Page Object** | Locators + atomic UI actions for one page, fluent API (`return self`) |
+| **WebInterface** | Selenium wrapper — waits, logging, retry |
+
+**Key rules:**
+- Locators live *only* in Page Objects
+- Tasks and Roles never return values
+- `@autologger` decorator on every Task, Role, and Test method
+- Multi-role workflows are supported in Tests
+
+See [docs/architecture.md](docs/architecture.md) for the full explanation.
+
 Before writing any code, read the reference implementations in `framework/_reference/`.
 
 ## Development Setup

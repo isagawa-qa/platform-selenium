@@ -142,7 +142,7 @@ platform/
 ├── tests/
 │   ├── data/               # Test data (credentials, fixtures)
 │   └── conftest.py         # Pytest fixtures and configuration
-├── docs/                   # Architecture, kernel, getting started
+├── docs/                   # Architecture, getting started
 ├── .mcp.json               # Playwright MCP server config
 ├── CLAUDE.md               # Kernel instructions
 ├── CONTRIBUTING.md          # Architecture rules and PR process
@@ -213,7 +213,7 @@ We'll build working tests on **YOUR** site in 60 minutes. No discovery phase. No
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture rules, development setup, and PR process.
+See [docs/architecture.md](docs/architecture.md) for the full 5-layer explanation, and [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and PR process.
 
 ## License
 

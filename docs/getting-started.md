@@ -94,7 +94,60 @@ User: testuser@example.com
 Password: testpass123
 ```
 
-The kernel will discover page elements, generate code following the 5-layer architecture, run the test, and iterate with human-in-the-loop if it fails.
+The kernel will:
+
+1. **Read** the reference implementations
+2. **Discover** page elements using Playwright MCP
+3. **Generate** files following the 5-layer architecture:
+   - `framework/pages/login_page.py` (Page Object)
+   - `framework/tasks/login_tasks.py` (Task)
+   - `framework/roles/user_role.py` (Role)
+   - `tests/test_login.py` (Test)
+4. **Run** the test
+5. **Iterate** if the test fails (with human-in-the-loop)
+
+### Understanding the output
+
+Each generated file follows the 5-layer architecture:
+
+**Page Object** — element locators and atomic interactions:
+```python
+class LoginPage:
+    EMAIL_INPUT = (By.CSS_SELECTOR, "#email")
+    PASSWORD_INPUT = (By.CSS_SELECTOR, "#password")
+    SUBMIT_BTN = (By.CSS_SELECTOR, "button[type='submit']")
+
+    def enter_email(self, email):
+        self.browser.type(*self.EMAIL_INPUT, email)
+        return self
+
+    def is_logged_in(self):
+        return self.browser.is_element_present(*self.DASHBOARD_HEADER)
+```
+
+**Task** — domain operations:
+```python
+class LoginTasks:
+    @autologger.automation_logger("Task")
+    def login(self, email, password):
+        self.login_page.enter_email(email).enter_password(password).click_submit()
+```
+
+**Role** — workflow orchestration:
+```python
+class UserRole:
+    @autologger.automation_logger("Role")
+    def login_and_verify(self, email, password):
+        self.login_tasks.login(email, password)
+```
+
+**Test** — thin, focused assertion:
+```python
+@autologger.automation_logger("Test")
+def test_user_login(self):
+    self.user_role.login_and_verify(email, password)
+    assert self.login_page.is_logged_in()
+```
 
 ## Windows Users
 
@@ -113,5 +166,6 @@ The `.mcp.json` is configured for cross-platform use with `npx`. If you encounte
 
 ## Next Steps
 
+- Read [Architecture](architecture.md) for the full 5-layer explanation
 - Browse `framework/_reference/` for code examples
 - Check [CONTRIBUTING.md](../CONTRIBUTING.md) if you want to contribute
