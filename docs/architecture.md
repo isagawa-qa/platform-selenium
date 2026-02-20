@@ -58,10 +58,10 @@ Tests use the AAA pattern (Arrange, Act, Assert) and are intentionally thin.
 **Conventions:**
 - `@autologger.automation_logger("Test")` decorator
 - **Arrange:** Create Role, generate test data with Faker
-- **Act:** Call exactly **one** Role workflow method
+- **Act:** Call Role workflow methods to execute business workflows — multi-role tests are supported for workflows that span multiple personas
 - **Assert:** Use POM state-check methods
 
-Tests never call Tasks or POMs for workflow. They only use POMs for assertions.
+Tests delegate workflow orchestration to Roles. They only use POMs directly for assertions.
 
 ### Decorator Strategy
 

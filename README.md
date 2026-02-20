@@ -25,17 +25,7 @@ AI can generate Selenium tests in seconds. But without enforcement:
 
 The Isagawa QA Platform combines a **5-layer test architecture** with the **Isagawa Kernel** — a self-building, self-improving enforcement system that runs *inside* the AI agent.
 
-The kernel doesn't monitor the AI from outside. It **manages the AI from within**:
-
-- **Hooks** gate every write operation — the AI physically cannot skip steps
-- **Protocols** teach the AI your standards — written in markdown, built by the AI itself
-- **Learning loops** ensure every failure makes the system stronger — permanently
-
-```
-Failure → Fix → Learn → Protocol Update → Hook Update → Never again
-```
-
-By session 10, the AI has learned 15+ lessons and physically cannot make 15+ types of mistakes.
+The kernel doesn't monitor the AI from outside. It **manages the AI from within**. The AI learns your standards, enforces them automatically, and gets permanently smarter after every failure.
 
 ---
 
@@ -62,10 +52,8 @@ Test (Arrange / Act / Assert)
 **Key rules:**
 - Locators live *only* in Page Objects — never in Tasks, Roles, or Tests
 - Tasks and Roles never return values — Tests assert through POM state-check methods
-- One Role workflow call per test — no orchestration in test files
+- Tests orchestrate Roles to execute business workflows — multi-role workflows are supported
 - `@autologger` decorator on every Task, Role, and Test method
-
-The 5-layer pattern is enforced by the kernel. The AI reads reference implementations before generating any code, and hooks block violations.
 
 See [docs/architecture.md](docs/architecture.md) for the full explanation and all 28 Design Decisions.
 
@@ -73,28 +61,15 @@ See [docs/architecture.md](docs/architecture.md) for the full explanation and al
 
 ## How It Works
 
-The AI follows a 5-step workflow, gated at every transition:
+The AI follows a gated workflow to generate tests:
 
-```
-1. User Input      → persona, URL, workflow description
-2. Pre-flight      → credential strategy, browser session
-3. AI Processing   → BDD scenarios, expected states, intent extraction
-4. Construction    → element discovery, POM + Task + Role + Test generation
-5. Execution       → run test, HITL triage on failure, learn from results
-```
+1. **User Input** — describe the persona, URL, and workflow to test
+2. **Pre-flight** — credential strategy and browser session setup
+3. **AI Processing** — BDD scenarios, expected states, intent extraction
+4. **Construction** — element discovery, code generation following the 5-layer architecture
+5. **Execution** — run the test, human-in-the-loop triage on failure
 
-On **any** failure, the agent stops and asks. No autonomous looping. Every fix triggers the learning cascade:
-
-```
-Test fails → Agent stops → Human reviews → Fix applied →
-  Protocol updated (soft) + Hook updated (hard) → Never happens again
-```
-
-This is two-tier enforcement:
-- **Protocol** = knowledge (the AI reads it and follows it)
-- **Hooks** = prevention (the AI is blocked if it tries to violate)
-
-See [docs/kernel.md](docs/kernel.md) for how the kernel works.
+On **any** failure, the agent stops and asks. No autonomous looping. Every fix makes the system permanently smarter — the same mistake cannot happen again.
 
 ---
 
@@ -103,6 +78,7 @@ See [docs/kernel.md](docs/kernel.md) for how the kernel works.
 ### Prerequisites
 
 - Python 3.10+
+- Node.js 18+ (for Playwright MCP)
 - Chrome or Brave browser
 - [Claude Code](https://claude.ai/claude-code) (for AI-powered test generation)
 
@@ -115,6 +91,9 @@ python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
+
+# Install Playwright MCP server (used for element discovery)
+npx @playwright/mcp@latest
 ```
 
 ### Run Tests
@@ -205,19 +184,32 @@ The kernel will be open-sourced separately. Domain packs — pre-loaded with pat
 | Audits after execution | Gates during execution |
 | "Did the AI do it right?" | "The AI can only do it right" |
 
-Most AI governance tools sit outside the agent — watching, logging, alerting. Isagawa runs **inside** the agent. The AI builds its own governance from markdown files, enforces it via hooks, and improves it after every failure.
-
 This is AI you can actually delegate QA to.
 
 ---
 
 ## Services
 
+We deliver a highly scalable, maintainable, enterprise-grade test automation framework powered by an AI agent managed by our own enforcement kernel. We build the entire test solution — login credentials, data management, environment configuration, CI/CD integration, and reporting. Your team owns the entire tech stack: a true AI-native test automation framework built on Claude Code. We also train your team to create and maintain test scripts on their own.
+
+### What We Deliver
+
+Depending on your needs, the full solution can include:
+
+- Login/auth credential management
+- Test data management
+- Environment configuration
+- CI/CD pipeline integration
+- Test reporting & dashboards
+- Page object architecture
+- API test coverage
+- Cross-browser/cross-device setup
+
 ### Free Demo — The Proof
 
 We'll build working tests on **YOUR** site in 60 minutes. You keep the code whether you hire us or not.
 
-This is possible because the 5-layer framework + AI workflow enables production-quality tests in a single session. No discovery phase. No proposal. No waiting.
+No discovery phase. No proposal. No waiting.
 
 **[Book a free demo →](https://github.com/isagawa-qa/platform/discussions)**
 
@@ -226,9 +218,9 @@ This is possible because the 5-layer framework + AI workflow enables production-
 | Offering | What's Included | Price |
 |----------|----------------|-------|
 | **Free Demo** | Live 60-min session on your site. Working tests you keep. | $0 |
-| **Implementation** | Full framework setup, multiple workflows, team training | $15,000 - $50,000 |
-| **Retainer** | Ongoing test development, maintenance, priority support | $1,000 - $3,000/month |
-| **Enterprise** | Full implementation, compliance docs, dedicated support | Custom ($50K+) |
+| **Implementation** | Full QA infrastructure: framework setup, credential management, environment config, CI/CD integration, test coverage, team training | $15,000 - $50,000 |
+| **Retainer** | Ongoing test development, maintenance, new workflow coverage, priority support | $1,000 - $3,000/month |
+| **Enterprise** | Full implementation, compliance docs, cross-browser/device setup, dedicated support | Custom ($50K+) |
 
 ---
 
