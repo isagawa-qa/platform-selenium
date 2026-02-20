@@ -2,25 +2,30 @@
 Pytest configuration and fixtures.
 
 Provides reusable fixtures for test execution:
-- driver: ChromeDriver instance with headless option
+- driver: Browser driver instance with headless option
 - config: Environment configuration (base URL)
 - test_users: Test user credentials
 - browser: BrowserInterface wrapper with all dependencies
 """
 
+import ast
 import os
 import sys
 import json
+import logging
 import pytest
 from pathlib import Path
 from datetime import datetime
 
-# Add framework to Python path
-FRAMEWORK_PATH = str(Path(__file__).parent.parent / "framework")
+# Project root and framework path
+PROJECT_ROOT = Path(__file__).parent.parent
+FRAMEWORK_PATH = str(PROJECT_ROOT / "framework")
 sys.path.insert(0, FRAMEWORK_PATH)
 
 from resources.chromedriver.driver import create_driver
 from interfaces.browser_interface import BrowserInterface
+
+logger = logging.getLogger("BrowserInterface")
 
 
 # ------------------------------------------------------------------------------
@@ -48,19 +53,22 @@ def pytest_addoption(parser):
 # Fixtures
 # ------------------------------------------------------------------------------
 
-@pytest.fixture()
+@pytest.fixture
 def driver(request):
     """
-    Create and teardown ChromeDriver for each test.
+    Create and teardown browser driver for each test.
 
     Function-scoped: New driver instance per test.
+    Supports Chrome and Brave via --browser flag.
     """
     headless = request.config.getoption("--headless")
     browser_type = request.config.getoption("--browser")
 
     chromedriver = create_driver(headless=headless, browser=browser_type)
-    yield chromedriver
-    chromedriver.quit()
+    try:
+        yield chromedriver
+    finally:
+        chromedriver.quit()
 
 
 @pytest.fixture(scope="session")
@@ -69,21 +77,17 @@ def config(request):
     Load environment configuration.
 
     Session-scoped: Loaded once per test session.
-
-    Returns:
-        dict: Environment config with keys: url
     """
     env_id = request.config.getoption("--env")
 
-    # Load config file
-    config_path = Path(__file__).parent.parent / "framework" / "resources" / "config" / "environment_config.json"
-    with open(config_path, 'r') as f:
+    config_path = PROJECT_ROOT / "framework" / "resources" / "config" / "environment_config.json"
+    with open(config_path, "r", encoding="utf-8") as f:
         environments = json.load(f)
 
     if env_id not in environments:
         raise ValueError(f"No environment match found for environment ID: {env_id}")
 
-    return environments[env_id]
+    yield environments[env_id]
 
 
 @pytest.fixture(scope="session")
@@ -92,62 +96,52 @@ def test_users():
     Load test user credentials.
 
     Session-scoped: Loaded once per test session.
-
-    Returns:
-        dict: Test users with keys like "registered_user", "new_user"
     """
-    users_path = Path(__file__).parent / "data" / "test_users.json"
-
-    if not users_path.exists():
-        raise FileNotFoundError(f"Test users file not found: {users_path}")
-
-    with open(users_path, 'r') as f:
-        return json.load(f)
+    users_path = PROJECT_ROOT / "tests" / "data" / "test_users.json"
+    with open(users_path, "r", encoding="utf-8") as f:
+        yield json.load(f)
 
 
-@pytest.fixture()
+@pytest.fixture
 def browser(driver, config):
     """
     Create BrowserInterface wrapper with driver, config, and logger.
 
     Function-scoped: New instance per test.
-
-    Args:
-        driver: ChromeDriver fixture
-        config: Environment config fixture
-
-    Returns:
-        BrowserInterface: Configured BrowserInterface instance
     """
-    import logging
-    logger = logging.getLogger("BrowserInterface")
-
     yield BrowserInterface(driver, config, logger)
 
 
 # ==============================================================================
 # HTML REPORT ENHANCEMENTS
 # ==============================================================================
-# NOTE: Only keeping simple, reliable enhancements to avoid pytest-html compat issues
-
-
-# Enhancement 3: Test Environment Summary
 def pytest_html_report_title(report):
     """Customize HTML report title."""
-    report.title = "Automation Practice - Authentication Test Report"
+    report.title = "Isagawa QA Platform - Test Report"
 
 
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config):
     """Add custom metadata to report header and auto-register markers."""
+    env_id = config.getoption("--env")
+    browser_type = config.getoption("--browser")
+
+    # Load base URL from environment config
+    config_path = PROJECT_ROOT / "framework" / "resources" / "config" / "environment_config.json"
+    base_url = ""
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            environments = json.load(f)
+        base_url = environments.get(env_id, {}).get("url", "")
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+
     config._metadata = {
-        'Project': 'Automation Practice Test Framework',
-        'Test Suite': 'Authentication Tests',
-        'Environment': config.getoption('--env'),
-        'Browser': config.getoption('--browser'),
+        'Project': 'Isagawa QA Platform',
+        'Environment': env_id,
+        'Base URL': base_url,
+        'Browser': browser_type.capitalize(),
         'Headless Mode': config.getoption('--headless'),
-        'Base URL': 'http://www.automationpractice.pl',
-        'Test Executor': 'Selenium WebDriver + ChromeDriver',
         'Report Generated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
 
@@ -159,31 +153,24 @@ def _register_dynamic_markers(config):
     """
     Scan test files and auto-register any pytest markers found.
 
-    This allows tests generated by MCP tools or AI to use custom markers
-    without requiring manual pytest.ini updates.
+    Allows AI-generated tests to use custom markers without manual pytest.ini updates.
     """
-    import ast
-    import glob
-
     markers = set()
-    tests_dir = Path(__file__).parent
+    tests_dir = PROJECT_ROOT / "tests"
 
-    for test_file in glob.glob(str(tests_dir / "**/*.py"), recursive=True):
+    for test_file in tests_dir.rglob("*.py"):
         try:
-            with open(test_file, "r", encoding="utf-8") as f:
-                tree = ast.parse(f.read())
+            tree = ast.parse(test_file.read_text(encoding="utf-8"))
 
             for node in ast.walk(tree):
-                # Look for @pytest.mark.X decorators
-                if isinstance(node, ast.Attribute):
-                    if (isinstance(node.value, ast.Attribute) and
-                        hasattr(node.value, 'attr') and
-                        node.value.attr == "mark"):
-                        markers.add(node.attr)
+                if (isinstance(node, ast.Attribute) and
+                    isinstance(node.value, ast.Attribute) and
+                    node.value.attr == "mark" and
+                    isinstance(node.value.value, ast.Name) and
+                    node.value.value.id == "pytest"):
+                    markers.add(node.attr)
         except (SyntaxError, UnicodeDecodeError):
-            # Skip files that can't be parsed
             pass
 
-    # Register discovered markers
     for marker in markers:
         config.addinivalue_line("markers", f"{marker}: Auto-discovered marker")
