@@ -54,27 +54,27 @@ class InquiryFormPage:
 
     def select_type(self, value: str) -> "InquiryFormPage":
         """Select inquiry type."""
-        self.browser.select_dropdown_by_visible_text(*self.TYPE_DROPDOWN, value)
+        self.browser.select_by_text(*self.TYPE_DROPDOWN, value)
         return self
 
     def select_source(self, value: str) -> "InquiryFormPage":
         """Select inquiry source."""
-        self.browser.select_dropdown_by_visible_text(*self.SOURCE_DROPDOWN, value)
+        self.browser.select_by_text(*self.SOURCE_DROPDOWN, value)
         return self
 
     def enter_vehicle_notes(self, text: str) -> "InquiryFormPage":
         """Enter vehicle notes."""
-        self.browser.enter_text(*self.VEHICLE_NOTES_INPUT, text)
+        self.browser.type(*self.VEHICLE_NOTES_INPUT, text)
         return self
 
     def select_assigned_user(self, value: str) -> "InquiryFormPage":
         """Select assigned user."""
-        self.browser.select_dropdown_by_visible_text(*self.ASSIGNED_USER_DROPDOWN, value)
+        self.browser.select_by_text(*self.ASSIGNED_USER_DROPDOWN, value)
         return self
 
     def select_status(self, value: str) -> "InquiryFormPage":
         """Select inquiry status."""
-        self.browser.select_dropdown_by_visible_text(*self.STATUS_DROPDOWN, value)
+        self.browser.select_by_text(*self.STATUS_DROPDOWN, value)
         return self
 
     def click_complete(self) -> "InquiryFormPage":

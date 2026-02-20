@@ -54,22 +54,22 @@ class CustomerSearchPage:
 
     def enter_first_name(self, text: str) -> "CustomerSearchPage":
         """Enter text into first name input."""
-        self.browser.enter_text(*self.FIRST_NAME_INPUT, text)
+        self.browser.type(*self.FIRST_NAME_INPUT, text)
         return self
 
     def enter_last_name(self, text: str) -> "CustomerSearchPage":
         """Enter text into last name input."""
-        self.browser.enter_text(*self.LAST_NAME_INPUT, text)
+        self.browser.type(*self.LAST_NAME_INPUT, text)
         return self
 
     def select_contact_type(self, value: str) -> "CustomerSearchPage":
         """Select option from contact type dropdown."""
-        self.browser.select_dropdown_by_visible_text(*self.CONTACT_TYPE_DROPDOWN, value)
+        self.browser.select_by_text(*self.CONTACT_TYPE_DROPDOWN, value)
         return self
 
     def enter_contact_identifier(self, text: str) -> "CustomerSearchPage":
         """Enter text into contact identifier input."""
-        self.browser.enter_text(*self.CONTACT_IDENTIFIER_INPUT, text)
+        self.browser.type(*self.CONTACT_IDENTIFIER_INPUT, text)
         return self
 
     def click_next(self) -> "CustomerSearchPage":
