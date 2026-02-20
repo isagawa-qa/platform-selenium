@@ -30,11 +30,18 @@ from interfaces.browser_interface import BrowserInterface
 def pytest_addoption(parser):
     """
     Configure custom command line options for running tests.
+
+    Falls back to environment variables (.env) when CLI flags are not provided.
     """
-    parser.addoption("--env", action="store", default="DEFAULT",
+    parser.addoption("--env", action="store",
+                     default=os.environ.get("TEST_ENV", "DEFAULT"),
                      help="Environment to test against (default: DEFAULT)")
-    parser.addoption("--headless", action="store", default="False",
-                     help="Run browser in headless mode (default: False)")
+    parser.addoption("--headless", action="store_true",
+                     default=os.environ.get("HEADLESS", "false").strip().lower() == "true",
+                     help="Run browser in headless mode")
+    parser.addoption("--browser", action="store",
+                     default=os.environ.get("BROWSER", "chrome"),
+                     help="Browser to use: chrome or brave (default: chrome)")
 
 
 # ------------------------------------------------------------------------------
@@ -48,10 +55,10 @@ def driver(request):
 
     Function-scoped: New driver instance per test.
     """
-    headless_str = request.config.getoption("--headless").strip().lower()
-    headless_bool = headless_str == "true"
+    headless = request.config.getoption("--headless")
+    browser_type = request.config.getoption("--browser")
 
-    chromedriver = create_driver(headless=headless_bool)
+    chromedriver = create_driver(headless=headless, browser=browser_type)
     yield chromedriver
     chromedriver.quit()
 
@@ -137,6 +144,7 @@ def pytest_configure(config):
         'Project': 'Automation Practice Test Framework',
         'Test Suite': 'Authentication Tests',
         'Environment': config.getoption('--env'),
+        'Browser': config.getoption('--browser'),
         'Headless Mode': config.getoption('--headless'),
         'Base URL': 'http://www.automationpractice.pl',
         'Test Executor': 'Selenium WebDriver + ChromeDriver',
