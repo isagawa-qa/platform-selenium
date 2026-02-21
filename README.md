@@ -39,7 +39,7 @@ Every test follows a strict separation of concerns. Each layer has one job:
 | **Role** | Coordinates tasks into business workflows | `CustomerRole.submit_new_inquiry()` |
 | **Task** | Performs one domain operation across pages | `search_and_create_customer()` |
 | **Page (POM)** | Knows where elements are on one page | `InquiryFormPage.select_type("Service")` |
-| **WebInterface** | Wraps browser automation (Selenium) | `BrowserInterface.click()`, `.type()` |
+| **BrowserInterface** | Wraps browser automation (Selenium) | `BrowserInterface.click()`, `.type()` |
 
 ```
 Test (Arrange / Act / Assert)
@@ -161,7 +161,7 @@ platform/
 │   │   ├── roles/          # Role reference implementations
 │   │   └── tests/          # Test reference implementations
 │   ├── interfaces/
-│   │   └── browser_interface.py   # WebInterface (Selenium wrapper)
+│   │   └── browser_interface.py   # BrowserInterface (Selenium wrapper)
 │   └── resources/
 │       ├── chromedriver/   # Driver factory
 │       ├── config/         # Environment configuration

@@ -4,7 +4,7 @@ Thank you for your interest in contributing.
 
 ## Architecture
 
-This project uses a **5-layer architecture**: Test > Role > Task > Page Object > WebInterface (BrowserInterface).
+This project uses a **5-layer architecture**: Test > Role > Task > Page Object > BrowserInterface (BrowserInterface).
 
 | Layer | Responsibility |
 |-------|---------------|
@@ -12,7 +12,7 @@ This project uses a **5-layer architecture**: Test > Role > Task > Page Object >
 | **Role** | Coordinates Tasks into business workflows (user persona) |
 | **Task** | Performs one domain operation, composes Page Objects |
 | **Page Object** | Locators + atomic UI actions for one page, fluent API (`return self`) |
-| **WebInterface** | Selenium wrapper — waits, logging, retry |
+| **BrowserInterface** | Selenium wrapper — waits, logging, retry |
 
 **Key rules:**
 - Locators live *only* in Page Objects
@@ -34,7 +34,7 @@ We welcome contributions that extend the platform's reach while preserving the 5
 
 The current implementation uses Python + Selenium. We'd love ports to other frameworks — all using the same layered architecture:
 
-- **Playwright** (Python) — port the WebInterface layer to use Playwright instead of Selenium
+- **Playwright** (Python) — port the BrowserInterface layer to use Playwright instead of Selenium
 - **Cypress** — JavaScript implementation following the same 5-layer pattern
 - **Selenide** (Java) — Java implementation for teams on the JVM
 
@@ -50,7 +50,7 @@ Bring the 5-layer architecture to other language ecosystems:
 
 Extend the architecture beyond browser UI testing — same layered approach, different interfaces:
 
-- **API layer** — replace WebInterface with an HTTP client (requests, RestAssured, etc.), keep Task/Role/Test layers identical
+- **API layer** — replace BrowserInterface with an HTTP client (requests, RestAssured, etc.), keep Task/Role/Test layers identical
 - **Mobile layer** — Appium or similar, same 5-layer pattern adapted for mobile interactions
 
 ### CI/CD & Infrastructure

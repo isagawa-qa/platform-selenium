@@ -10,7 +10,7 @@ Every test in the Isagawa QA Platform follows a strict separation of concerns. E
 | **Role** | Coordinates tasks into business workflows | `CustomerRole.submit_new_inquiry()` |
 | **Task** | Performs one domain operation across pages | `search_and_create_customer()` |
 | **Page Object (POM)** | Knows where elements are on one page | `InquiryFormPage.select_type("Service")` |
-| **WebInterface** | Wraps browser automation (Selenium) | `BrowserInterface.click()`, `.type()` |
+| **BrowserInterface** | Wraps browser automation (Selenium) | `BrowserInterface.click()`, `.type()` |
 
 ```
 Test (Arrange / Act / Assert)
@@ -24,7 +24,7 @@ Test (Arrange / Act / Assert)
 
 ## Layer Details
 
-### Layer 1: WebInterface (BrowserInterface)
+### Layer 1: BrowserInterface (BrowserInterface)
 
 The foundation layer. Wraps Selenium WebDriver with:
 

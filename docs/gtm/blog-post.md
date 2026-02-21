@@ -114,11 +114,11 @@ An AI-Native solution teaches the agent the architecture. Here's what that looks
 - **Role layer**: User journeys (e.g., "ShopperRole"). Coordinates tasks.
 - **Task layer**: Reusable interactions (e.g., "AddToCart"). Uses page objects.
 - **Page layer**: Page-specific logic (e.g., "ProductPage"). Uses web interface.
-- **WebInterface layer**: Selector mappings. Only layer that knows CSS/XPath.
+- **BrowserInterface layer**: Selector mappings. Only layer that knows CSS/XPath.
 
 **2. Enforcement hooks (built by the AI from the protocol):**
 - **Layer boundary hook**: Blocks writes if a test file directly imports a page object (bypassing role and task layers). The architecture says test → role → task → page. The hook enforces it.
-- **Selector leak hook**: Blocks writes if a task or role contains a hardcoded selector. Selectors belong in WebInterface. Nowhere else.
+- **Selector leak hook**: Blocks writes if a task or role contains a hardcoded selector. Selectors belong in BrowserInterface. Nowhere else.
 - **Naming convention hook**: Blocks writes if test file names don't match pattern `{feature}-{scenario}.spec.ts`.
 
 **3. Learning cascade (triggered on every failure):**
@@ -134,7 +134,7 @@ This isn't hypothetical. By session 10 of real usage, Isagawa has typically reco
 
 - **Lesson 3**: Hardcoded waits (`page.waitForTimeout(5000)`) cause flaky tests. Protocol updated: use semantic waits (`page.waitForSelector()`). Hook added: blocks any file containing `waitForTimeout`.
 - **Lesson 7**: Test files that don't import a role (importing page objects directly) break maintainability. Protocol updated: mandate role layer. Hook updated: block any test import that isn't a role.
-- **Lesson 12**: Selectors in task implementations couple tasks to UI changes. Protocol updated: all selectors via WebInterface. Hook updated: scan task files, block if CSS selector regex matches.
+- **Lesson 12**: Selectors in task implementations couple tasks to UI changes. Protocol updated: all selectors via BrowserInterface. Hook updated: scan task files, block if CSS selector regex matches.
 
 Each lesson makes the next session smarter. Each failure mode becomes impossible. The AI doesn't just write tests — it builds the quality infrastructure that prevents bad tests.
 
@@ -196,7 +196,7 @@ Isagawa QA Platform is open source. MIT license. Available at [github.com/isagaw
 
 What you get:
 
-- **Full platform code**: Five-layer QA architecture (Test/Role/Task/Page/WebInterface), implemented in Python + Playwright.
+- **Full platform code**: Five-layer QA architecture (Test/Role/Task/Page/BrowserInterface), implemented in Python + Playwright.
 - **Isagawa Kernel**: The self-building, self-improving agent core. This is what reads your protocol markdown and builds enforcement hooks.
 - **Sample protocols**: QA domain protocol showing how to define architecture, layer boundaries, naming conventions, quality gates.
 - **Hook examples**: Pre-commit hooks, runtime gates, test failure detectors — see how enforcement actually works.

@@ -72,7 +72,7 @@ You are starting the 5-step QA test generation workflow with collaborative const
 - `mcp_server/` - MCP server code, tools, gates, generators
 - `.claude/skills/` - Skill files
 - `.claude/commands/` - Command files
-- `framework/interfaces/` - WebInterface
+- `framework/interfaces/` - BrowserInterface
 - `framework/resources/` - Core utilities
 - `CLAUDE.md`, `FRAMEWORK.md` - Configuration files
 

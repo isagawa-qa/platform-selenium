@@ -61,7 +61,7 @@ So we built enforcement at the agent level. It's called the **Isagawa Kernel**, 
 **The stack:**
 
 5-layer Selenium architecture:
-1. WebInterface (element operations)
+1. BrowserInterface (element operations)
 2. BrowserInterface (navigation, waits)
 3. PageObjects (page-specific logic)
 4. Tests (pure assertions, no setup)
@@ -103,11 +103,11 @@ PageObjects (page-specific flows, delegates to BrowserInterface)
   ↓
 BrowserInterface (navigate, wait, execute_script)
   ↓
-WebInterface (find, click, send_keys, get_text)
+BrowserInterface (find, click, send_keys, get_text)
 ```
 
 **Key pattern:**
-Tests **never** import WebInterface or BrowserInterface directly. They only call PageObject methods. PageObjects **never** call `driver.find_element`—they delegate to BrowserInterface or WebInterface.
+Tests **never** import BrowserInterface or BrowserInterface directly. They only call PageObject methods. PageObjects **never** call `driver.find_element`—they delegate to BrowserInterface or BrowserInterface.
 
 **Example:**
 
@@ -230,7 +230,7 @@ tests/test_checkout.py calls driver.find_element() directly.
 FIX:
 1. Move element selector to PageObject
 2. Call PageObject method from test
-3. Tests should only import PageObjects, never WebInterface
+3. Tests should only import PageObjects, never BrowserInterface
 
 Protocol: .claude/protocols/qa-protocol.md (Line 47)
 ```
@@ -391,7 +391,7 @@ When a test fails, the AI doesn't just fix it. It invokes `/kernel/learn`, which
 
 We built this for Selenium test automation:
 
-1. **WebInterface** — element operations (click, send_keys, get_text)
+1. **BrowserInterface** — element operations (click, send_keys, get_text)
 2. **BrowserInterface** — navigation, waits, script execution
 3. **PageObjects** — page-specific flows, no raw selectors
 4. **Tests** — pure assertions, no setup logic
