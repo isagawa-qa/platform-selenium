@@ -11,6 +11,7 @@ This skill guides the agent through setting up domain-specific enforcement for t
 | Step | Action | Reference |
 |------|--------|-----------|
 | 1 | Verify prerequisites | → `references/step-01-prerequisites.md` |
+| 1b | Verify CLAUDE.md | → `references/step-01b-verify-claude-md.md` |
 | 2 | Discover repo structure | → `references/step-02-discover.md` |
 | 3 | Read reference code | → `references/step-03-read.md` |
 | 4 | Extract patterns | → `references/step-04-extract.md` |

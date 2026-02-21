@@ -100,7 +100,7 @@ Edit `framework/resources/config/environment_config.json` to add your applicatio
 
 ### 3. Set up the AI agent
 
-The platform includes a QA domain pack. On first run, the agent analyzes your codebase and configures itself to enforce the 5-layer architecture.
+The platform includes a QA domain pack and a pre-configured `CLAUDE.md` that drives the kernel. On first run, the agent reads these instructions, analyzes your codebase, and configures itself to enforce the 5-layer architecture.
 
 ```bash
 claude                    # Start Claude Code in the platform/ directory

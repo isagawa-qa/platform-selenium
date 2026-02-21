@@ -1,3 +1,36 @@
+# Step 1b: Verify CLAUDE.md
+
+Verify the kernel instruction file exists and has the required sections. This file drives the entire kernel — without it, the agent has no instructions.
+
+## Check
+
+Read `CLAUDE.md` at the project root.
+
+### If CLAUDE.md exists:
+
+Verify these **required sections** are present:
+
+| Section | Purpose |
+|---------|---------|
+| `## CRITICAL: Never Bypass Hook Enforcement` | Prevents agent from editing state files directly |
+| `## CRITICAL: First Action Rule` | Ensures `/kernel/session-start` is always first |
+| `## The Loop` | Defines session-start → anchor → WORK → complete cycle |
+| `## Commands` | Lists available kernel commands |
+| `## Smart Gates` | Explains hook blocking behavior |
+| `## Principles` | Self-build, self-improve, safety-first, autonomy |
+
+**If any section is missing:**
+- Add the missing section(s)
+- Use the template below as reference
+- Report what was added
+
+### If CLAUDE.md does NOT exist:
+
+Create it using the full template below.
+
+## Template
+
+```markdown
 # Isagawa Kernel (Minimal)
 
 You are a self-building, self-improving, safety-first agent.
@@ -23,17 +56,14 @@ When user gives any task or says "continue":
 
 ## The Loop
 
-```
-session-start → anchor → WORK ─────────────────→ complete
-                   ↑         ↓                       ↑
-                   └─ every 10 actions ←─────────────┘
+session-start → anchor → WORK → complete
+                   ↑         ↓          ↑
+                   └─ every 10 actions ──┘
                              ↓
                    failure? → fix → learn (MANDATORY)
-```
 
 ### Work Loop Details
 
-```
 WORK:
   1. Write/Edit/Bash (any action)
   2. Hook AUTO-INCREMENTS counter (you don't need to)
@@ -42,7 +72,6 @@ WORK:
   5. If test fails → fix → /kernel/learn
   6. Repeat until done
   7. /kernel/complete
-```
 
 **Auto Counter:** Hook automatically tracks Write, Edit, AND Bash. Blocks at 10 actions (configurable via `actions_limit`). You do NOT need to increment manually.
 
@@ -65,45 +94,18 @@ After `/kernel/domain-setup` creates new hooks:
 
 ## Commands
 
-```
 .claude/commands/kernel/
 ├── session-start.md   ← Check state, resume (domain persistence rule)
 ├── domain-setup.md    ← Invokes skill (see below)
 ├── anchor.md          ← Re-read protocol + check work (Part A + Part B)
-├── validate.md        ← DEPRECATED (merged into anchor Part B)
 ├── learn.md           ← Update protocol + hooks (after fix) - CLEARS BLOCK
 ├── fix.md             ← Impact assessment before any fix (MANDATORY)
 └── complete.md        ← Final gate (before done)
-```
-
-## Domain Setup Skill
-
-`/kernel/domain-setup` invokes a 10-step skill:
-
-```
-.claude/skills/kernel-domain-setup/
-├── SKILL.md           ← Orchestration (11 steps)
-└── references/
-    ├── step-01-prerequisites.md      ← MCP, dependencies, restart
-    ├── step-01b-verify-claude-md.md  ← Verify/create CLAUDE.md
-    ├── step-02-discover.md           ← Repo structure
-    ├── step-03-read.md               ← Reference code
-    ├── step-04-extract.md            ← Patterns
-    ├── step-05-enforcement.md        ← Two-layer enforcement
-    ├── step-06-workflow.md           ← Skills/workflows
-    ├── step-07-protocol.md           ← Build indexed protocol
-    ├── step-08-commands.md           ← Wrap for kernel loop
-    ├── step-09-state.md              ← Update state files
-    └── step-10-report.md             ← Report & restart
-```
-
-Each step is a separate reference file. Read before executing.
 
 ## Smart Gates
 
 Hook blocks writes if state is missing. Tells you how to fix:
 
-```
 BLOCKED: Lesson not recorded (trigger: test_failure)
 
 FIX:
@@ -112,7 +114,6 @@ FIX:
 3. Then retry your write
 
 Command: /kernel/learn
-```
 
 ## Principles
 
@@ -120,3 +121,14 @@ Command: /kernel/learn
 - **Self-Improve**: Update protocol + hooks after every failure
 - **Safety-First**: Hook blocks, can't be bypassed
 - **Autonomy**: Report after, don't ask before
+```
+
+## Report
+
+```
+CLAUDE.MD: [Created | Verified | Updated]
+
+Sections: [all present | added: list]
+
+Proceeding to Step 2...
+```

@@ -26,7 +26,7 @@ Create `.claude/state/qa_workflow.json`:
   "protocol_path": ".claude/protocols/qa-protocol.md",
   "anchored": false,
   "actions_since_anchor": 0,
-  "actions_limit": 7,
+  "actions_limit": 10,
   "timestamp": "[ISO-8601]"
 }
 ```

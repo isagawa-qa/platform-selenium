@@ -61,6 +61,8 @@ Add credentials to `tests/data/test_users.json` if your workflow requires login:
 
 The platform includes a QA domain pack — pre-loaded architecture patterns, conventions, and quality gates. On first run, the AI agent uses this pack to configure itself.
 
+The kernel's instructions live in `CLAUDE.md` at the project root. This file ships pre-configured — you don't need to edit it. It tells the agent how to initialize, enforce architecture, and improve over time. Domain setup reads this file and builds everything else automatically.
+
 Open a terminal in the `platform/` directory and start Claude Code:
 
 ```bash
