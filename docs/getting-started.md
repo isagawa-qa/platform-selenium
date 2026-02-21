@@ -67,19 +67,19 @@ Open a terminal in the `platform/` directory and start Claude Code:
 claude
 ```
 
-On first run, the agent will:
+Once inside, type `start` or describe any task — this triggers the agent to initialize. On first run, the agent will:
 - Detect a fresh setup (no existing domain)
 - Analyze the codebase and reference implementations
 - Learn the 5-layer architecture patterns
 - Configure itself to enforce those patterns
 
-You'll be prompted to restart Claude Code once to activate enforcement. After restarting:
+When domain setup completes, the agent will ask you to restart Claude Code to activate enforcement:
 
 ```bash
 claude
 ```
 
-The agent is now ready to generate tests. This setup only happens once — future sessions pick up where you left off.
+After restarting, type `continue`. The agent picks up where it left off and is now ready to generate tests. This setup only happens once — future sessions pick up automatically.
 
 ## 5. Generate your first test
 

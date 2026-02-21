@@ -104,9 +104,13 @@ The platform includes a QA domain pack. On first run, the agent analyzes your co
 
 ```bash
 claude                    # Start Claude Code in the platform/ directory
-# Agent detects a fresh setup and initializes automatically.
-# When prompted, restart Claude Code to activate enforcement.
-claude                    # Start again — agent is now ready
+```
+
+Once inside, type `start` or describe any task. The agent will detect a fresh setup and run domain initialization automatically. When it finishes, it will ask you to restart Claude Code to activate enforcement.
+
+```bash
+claude                    # Start again
+> continue                # Agent picks up where it left off — now ready
 ```
 
 ### 4. Generate your first test
