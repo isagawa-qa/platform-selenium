@@ -73,9 +73,9 @@ Test (Arrange / Act / Assert)
 - Python 3.10+
 - Node.js 18+ (for Playwright MCP)
 - Chrome or Brave browser
-- [Claude Code](https://claude.ai/claude-code) (for AI-powered test generation)
+- [Claude Code](https://claude.ai/claude-code)
 
-### Install
+### 1. Install
 
 ```bash
 git clone https://github.com/isagawa-qa/platform.git
@@ -84,35 +84,58 @@ python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
-
-# Install Playwright MCP server (used for element discovery)
-npx @playwright/mcp@latest
 ```
 
-### Run Tests
+### 2. Configure your test target
+
+Edit `framework/resources/config/environment_config.json` to add your application URL:
+
+```json
+{
+  "myapp": {
+    "url": "https://staging.your-app.com"
+  }
+}
+```
+
+### 3. Set up the AI agent
+
+The platform includes a QA domain pack. On first run, the agent analyzes your codebase and configures itself to enforce the 5-layer architecture.
 
 ```bash
-# Run all tests
-pytest tests/
-
-# Run with HTML report
-pytest tests/ --html=report.html
-
-# Run against a specific environment
-pytest tests/ --env=parabank
+claude                    # Start Claude Code in the platform/ directory
+# Agent detects a fresh setup and initializes automatically.
+# When prompted, restart Claude Code to activate enforcement.
+claude                    # Start again — agent is now ready
 ```
 
-### AI-Powered Test Generation
-
-With Claude Code installed:
+### 4. Generate your first test
 
 ```bash
-claude
-# Then use the /qa-workflow command:
-# "Create a test for the login workflow on https://your-site.com"
+# Inside Claude Code, invoke the workflow command:
+/qa-workflow
 ```
 
-The kernel enforces the 5-layer architecture automatically. The AI reads reference implementations, discovers elements via Playwright MCP, and generates POM → Task → Role → Test files that follow every convention.
+The agent will ask for your test requirement:
+
+```
+As a [persona], I want to [action] on [URL]
+
+Example: "As a customer, I want to login on https://staging.your-app.com"
+```
+
+It then discovers page elements via Playwright MCP and generates all 5 layers — Page Object, Task, Role, and Test — following every convention automatically.
+
+### 5. Review generated code
+
+```bash
+# Inside Claude Code:
+/pr
+```
+
+The agent reviews all generated files against the architecture rules — layer separation, naming conventions, decorator usage, locator placement — and reports violations with file and line references. Like a senior SDET code review, done in seconds.
+
+For detailed setup instructions, see [Getting Started](docs/getting-started.md).
 
 ---
 
@@ -138,7 +161,7 @@ platform/
 │   └── resources/
 │       ├── chromedriver/   # Driver factory
 │       ├── config/         # Environment configuration
-│       └── utilities/      # Autologger, data generator, logger
+│       └── utilities/      # Autologger
 ├── tests/
 │   ├── data/               # Test data (credentials, fixtures)
 │   └── conftest.py         # Pytest fixtures and configuration
@@ -213,7 +236,7 @@ We'll build working tests on **YOUR** site in 60 minutes. No discovery phase. No
 
 ## Contributing
 
-See [docs/architecture.md](docs/architecture.md) for the full 5-layer explanation, and [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and PR process.
+See [Getting Started](docs/getting-started.md) for detailed setup, [Architecture](docs/architecture.md) for the full 5-layer explanation, and [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and PR process.
 
 ## License
 

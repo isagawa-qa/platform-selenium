@@ -4,12 +4,10 @@
 
 - **Python 3.10+**
 - **Chrome** or **Brave** browser
-- **Claude Code** — [install instructions](https://claude.ai/claude-code)
 - **Node.js 18+** (for Playwright MCP server)
+- **Claude Code** — [install instructions](https://claude.ai/claude-code)
 
-## Installation
-
-### 1. Clone and set up
+## 1. Clone and install
 
 ```bash
 git clone https://github.com/isagawa-qa/platform.git
@@ -19,7 +17,7 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure environment
+## 2. Configure environment
 
 ```bash
 cp .env.example .env
@@ -29,13 +27,13 @@ Edit `.env` to set your preferences:
 
 ```
 BROWSER=chrome        # or 'brave'
-HEADLESS=true         # or 'false' for visible browser
+HEADLESS=false        # or 'true' for headless mode
 TEST_ENV=DEFAULT      # matches key in environment_config.json
 ```
 
-### 3. Add your test targets
+## 3. Add your test target
 
-Edit `framework/resources/config/environment_config.json` to add your application URLs:
+Edit `framework/resources/config/environment_config.json` to add your application URL:
 
 ```json
 {
@@ -48,7 +46,7 @@ Edit `framework/resources/config/environment_config.json` to add your applicatio
 }
 ```
 
-Add credentials to `tests/data/test_users.json` if needed:
+Add credentials to `tests/data/test_users.json` if your workflow requires login:
 
 ```json
 {
@@ -59,11 +57,101 @@ Add credentials to `tests/data/test_users.json` if needed:
 }
 ```
 
-### 4. Run existing tests
+## 4. Set up the AI agent
+
+The platform includes a QA domain pack — pre-loaded architecture patterns, conventions, and quality gates. On first run, the AI agent uses this pack to configure itself.
+
+Open a terminal in the `platform/` directory and start Claude Code:
+
+```bash
+claude
+```
+
+On first run, the agent will:
+- Detect a fresh setup (no existing domain)
+- Analyze the codebase and reference implementations
+- Learn the 5-layer architecture patterns
+- Configure itself to enforce those patterns
+
+You'll be prompted to restart Claude Code once to activate enforcement. After restarting:
+
+```bash
+claude
+```
+
+The agent is now ready to generate tests. This setup only happens once — future sessions pick up where you left off.
+
+## 5. Generate your first test
+
+Inside Claude Code, invoke the QA workflow command:
+
+```
+/qa-workflow
+```
+
+The agent will prompt you for your test requirement in this format:
+
+```
+As a [persona], I want to [action] on [URL]
+```
+
+For example:
+
+```
+As a customer, I want to login and view my account on https://staging.your-app.com
+```
+
+You'll also provide a **workflow identifier** — this creates organized folders at `framework/pages/{workflow}/` and `tests/{workflow}/`.
+
+The agent then executes a 5-step workflow:
+
+1. **User Input** — Validates your requirement and checks for duplicate coverage
+2. **Pre-flight** — Configures environment and verifies connectivity
+3. **Discovery** — Uses Playwright MCP to discover page elements and interactions
+4. **Construction** — Reads reference implementations, then generates code following the 5-layer architecture:
+   - `framework/pages/{workflow}/` — Page Objects (locators + atomic methods)
+   - `framework/tasks/{workflow}/` — Tasks (domain operations)
+   - `framework/roles/{workflow}/` — Roles (workflow orchestration)
+   - `tests/{workflow}/` — Tests (assertions)
+5. **Execution** — Runs the generated test with human-in-the-loop triage on failure
+
+## 6. Review generated code
+
+After tests are generated and passing, run the PR review command inside Claude Code:
+
+```
+/pr
+```
+
+The agent scans all generated files and validates them against the architecture rules:
+
+- **Page Objects** — locators as class constants, atomic methods returning `self`, state-check methods
+- **Tasks** — `@autologger` decorator, no locator imports, no return values
+- **Roles** — `@autologger` decorator, imports from tasks only, no direct navigation
+- **Tests** — `@autologger` decorator, assertions via POM state-check methods, no locators
+
+If violations are found, the agent reports them with file and line references and asks how you'd like to proceed (fix all, fix specific, explain, or approve with exceptions).
+
+If everything passes:
+
+```
+PR REVIEW: APPROVED
+
+Summary: 4 files checked, 0 violations
+
+Ready to merge.
+```
+
+## 7. Run tests manually
+
+Once you have generated tests, you can run them directly with pytest:
 
 ```bash
 # Run all tests
 pytest tests/
+
+# Run a specific workflow
+pytest tests/myapp/
 
 # Run with a specific environment
 pytest tests/ --env=myapp
@@ -75,38 +163,7 @@ pytest tests/ --headless
 pytest tests/ --html=report.html
 ```
 
-## AI-Powered Test Generation
-
-### Setup Claude Code
-
-1. Install Claude Code if you haven't already
-2. Open a terminal in the `platform/` directory
-3. Run `claude` to start
-
-### Generate your first test
-
-Tell Claude what you want to test:
-
-```
-Create a test for the login workflow on https://staging.your-app.com
-
-User: testuser@example.com
-Password: testpass123
-```
-
-The kernel will:
-
-1. **Read** the reference implementations
-2. **Discover** page elements using Playwright MCP
-3. **Generate** files following the 5-layer architecture:
-   - `framework/pages/login_page.py` (Page Object)
-   - `framework/tasks/login_tasks.py` (Task)
-   - `framework/roles/user_role.py` (Role)
-   - `tests/test_login.py` (Test)
-4. **Run** the test
-5. **Iterate** if the test fails (with human-in-the-loop)
-
-### Understanding the output
+## Understanding the output
 
 Each generated file follows the 5-layer architecture:
 
@@ -167,5 +224,5 @@ The `.mcp.json` is configured for cross-platform use with `npx`. If you encounte
 ## Next Steps
 
 - Read [Architecture](architecture.md) for the full 5-layer explanation
-- Browse `framework/_reference/` for code examples
+- Browse `framework/_reference/` for canonical code patterns
 - Check [CONTRIBUTING.md](../CONTRIBUTING.md) if you want to contribute
