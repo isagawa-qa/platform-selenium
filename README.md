@@ -156,7 +156,7 @@ platform/
 
 QA is one domain. The Isagawa Kernel supports **any** domain.
 
-The kernel is domain-agnostic — it provides the enforcement loop (hooks, protocols, learning) while domain-specific knowledge lives in protocol files and skills. What you see here in QA (5-layer architecture, gated workflows, self-improving quality) can be applied to:
+The kernel is domain-agnostic — it enforces how AI executes, not just what it generates. What you see here in QA can be applied to:
 
 - Code generation and review
 - Content creation workflows
