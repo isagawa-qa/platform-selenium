@@ -4,7 +4,7 @@
 
 > AI can generate tests. But can you trust it to execute correctly?
 
-Most AI tools watch what happened and report after the fact. Isagawa **enforces how AI works** — gating every action at runtime so the AI can only do it right.
+Most AI tools watch what happened and report after the fact. Isagawa **enforces how AI works** gating every action at runtime so the AI can only do it right.
 
 This isn't AI governance. It's **AI execution management**.
 
@@ -23,7 +23,7 @@ AI can generate Selenium tests in seconds. But without enforcement:
 
 ## The Solution
 
-The Isagawa QA Platform combines a **5-layer test architecture** with the **Isagawa Kernel** — a self-building, self-improving enforcement system that runs *inside* the AI agent.
+The Isagawa QA Platform combines a **5-layer test architecture** with the **Isagawa Kernel** a self-building, self-improving enforcement system that runs *inside* the AI agent.
 
 The kernel doesn't monitor the AI from outside. It **manages the AI from within**. The AI learns your standards, enforces them automatically, and gets permanently smarter after every failure.
 
@@ -50,9 +50,9 @@ Test (Arrange / Act / Assert)
 ```
 
 **Key rules:**
-- Locators live *only* in Page Objects — never in Tasks, Roles, or Tests
-- Tasks and Roles never return values — Tests assert through POM state-check methods
-- Tests orchestrate Roles to execute business workflows — multi-role workflows are supported
+- Locators live *only* in Page Objects, never in Tasks, Roles, or Tests
+- Tasks and Roles never return values, Tests assert through POM state-check methods
+- Tests orchestrate Roles to execute business workflows, multi-role workflows are supported
 - `@autologger` decorator on every Task, Role, and Test method
 
 ---
@@ -62,7 +62,7 @@ Test (Arrange / Act / Assert)
 1. Describe the persona, URL, and workflow you want to test
 2. The AI discovers page elements and generates code following the 5-layer architecture
 3. Tests are executed with human-in-the-loop triage on failure
-4. Every fix makes the system permanently smarter — the same mistake cannot happen again
+4. Every fix makes the system permanently smarter, the same mistake cannot happen again
 
 ---
 
@@ -183,14 +183,14 @@ platform/
 
 QA is one domain. The Isagawa Kernel supports **any** domain.
 
-The kernel is domain-agnostic — it enforces how AI executes, not just what it generates. What you see here in QA can be applied to:
+The kernel is domain-agnostic, it enforces how AI executes, not just what it generates. What you see here in QA can be applied to:
 
 - Code generation and review
 - Content creation workflows
 - Data pipeline management
 - Any process where AI needs to execute correctly, not just generate output
 
-The kernel will be open-sourced separately. Domain packs — pre-loaded with patterns, anti-patterns, and quality gates for specific verticals — will be available for teams that want to skip the learning curve. The first pack targets vibe coders: ship code like a senior engineer.
+The kernel will be open-sourced separately. Domain packs pre-loaded with patterns, anti-patterns, and quality gates for specific verticals will be available for teams that want to skip the learning curve. The first pack targets vibe coders: ship code like a senior engineer.
 
 ---
 
@@ -210,7 +210,7 @@ This is AI you can actually delegate QA to.
 
 ## Services
 
-We deliver a highly scalable, maintainable, enterprise-grade test automation framework powered by an AI agent managed by our own enforcement kernel. We build the entire test solution — login credentials, data management, environment configuration, and page object architecture. Your team owns the entire tech stack: a true AI-native test automation framework built on Claude Code. We also train your team to create and maintain test scripts on their own.
+We deliver a highly scalable, maintainable, enterprise-grade test automation framework powered by an AI agent managed by our own enforcement kernel. We build the entire test solution: login credentials, data management, environment configuration, and page object architecture. Your team owns the entire tech stack: a true AI-native test automation framework built on Claude Code. We also train your team to create and maintain test scripts on their own.
 
 ### What We Deliver
 
@@ -248,4 +248,4 @@ See [Getting Started](docs/getting-started.md) for detailed setup, [Architecture
 
 ---
 
-<sub>Built with the [Isagawa Kernel](https://github.com/isagawa-qa) — self-building, self-improving, safety-first.</sub>
+<sub>Built with the [Isagawa Kernel](https://github.com/isagawa-qa) self-building, self-improving, safety-first.</sub>
