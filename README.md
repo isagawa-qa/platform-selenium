@@ -225,7 +225,7 @@ Depending on your needs, the full solution can include:
 
 We'll build working tests on **YOUR** site in 60 minutes. No discovery phase. No proposal. No waiting.
 
-**[Book a demo →](https://github.com/isagawa-qa/platform/discussions)**
+**[alain@isagawa.co](mailto:alain@isagawa.co)** · **[LinkedIn](https://www.linkedin.com/in/alainisagawa/)**
 
 ### Pricing
 
