@@ -1,4 +1,4 @@
-# Step 7: Build Protocol
+# Step 8: Build Protocol
 
 Create `.claude/protocols/qa-protocol.md` as a **pure index** (no content duplication).
 
@@ -105,7 +105,7 @@ Initialize `.claude/lessons/lessons.md` with:
 
 ---
 
-## Step 7b: Adaptive Indexing Rule
+## Step 8b: Adaptive Indexing Rule
 
 **Threshold: 200 lines**
 
@@ -117,7 +117,7 @@ When any referenced file exceeds 200 lines:
 
 ---
 
-## Step 7c: Dynamic Category Creation
+## Step 8c: Dynamic Category Creation
 
 When content doesn't fit existing categories:
 

@@ -1,4 +1,4 @@
-# Step 3: Read Reference Code
+# Step 4: Read Reference Code
 
 Read these files to understand patterns:
 
@@ -15,4 +15,4 @@ Read these files to understand patterns:
 
 ## Action
 
-Read each file. Note key patterns for Step 3.
+Read each file. Note key patterns for Step 5.

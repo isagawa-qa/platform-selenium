@@ -1,4 +1,4 @@
-# Step 4: Extract Patterns
+# Step 5: Extract Patterns
 
 From the reference code, identify:
 

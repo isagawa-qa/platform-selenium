@@ -1,4 +1,4 @@
-# Step 2: Discover Repo Structure
+# Step 3: Discover Repo Structure
 
 Scan and list what exists:
 

@@ -1,6 +1,6 @@
-# Step 8: Wrap Commands
+# Step 9: Wrap Commands
 
-Discovered commands (from Step 6) must run within the kernel loop for self-improvement and anchor-on-drift.
+Discovered commands (from Step 7) must run within the kernel loop for self-improvement and anchor-on-drift.
 
 ## Process
 

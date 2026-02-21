@@ -1,4 +1,4 @@
-# Step 1b: Verify CLAUDE.md
+# Step 2: Verify CLAUDE.md
 
 Verify the kernel instruction file exists and has the required sections. This file drives the entire kernel — without it, the agent has no instructions.
 
@@ -130,5 +130,5 @@ CLAUDE.MD: [Created | Verified | Updated]
 
 Sections: [all present | added: list]
 
-Proceeding to Step 2...
+Proceeding to Step 3...
 ```

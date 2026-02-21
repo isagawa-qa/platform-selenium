@@ -78,23 +78,23 @@ After `/kernel/domain-setup` creates new hooks:
 
 ## Domain Setup Skill
 
-`/kernel/domain-setup` invokes a 10-step skill:
+`/kernel/domain-setup` invokes an 11-step skill:
 
 ```
 .claude/skills/kernel-domain-setup/
 ├── SKILL.md           ← Orchestration (11 steps)
 └── references/
-    ├── step-01-prerequisites.md      ← MCP, dependencies, restart
-    ├── step-01b-verify-claude-md.md  ← Verify/create CLAUDE.md
-    ├── step-02-discover.md           ← Repo structure
-    ├── step-03-read.md               ← Reference code
-    ├── step-04-extract.md            ← Patterns
-    ├── step-05-enforcement.md        ← Two-layer enforcement
-    ├── step-06-workflow.md           ← Skills/workflows
-    ├── step-07-protocol.md           ← Build indexed protocol
-    ├── step-08-commands.md           ← Wrap for kernel loop
-    ├── step-09-state.md              ← Update state files
-    └── step-10-report.md             ← Report & restart
+    ├── step-01-prerequisites.md       ← MCP, dependencies, restart
+    ├── step-02-verify-claude-md.md    ← Verify/create CLAUDE.md
+    ├── step-03-discover.md            ← Repo structure
+    ├── step-04-read.md                ← Reference code
+    ├── step-05-extract.md             ← Patterns
+    ├── step-06-enforcement.md         ← Two-layer enforcement
+    ├── step-07-workflow.md            ← Skills/workflows
+    ├── step-08-protocol.md            ← Build indexed protocol
+    ├── step-09-commands.md            ← Wrap for kernel loop
+    ├── step-10-state.md               ← Update state files
+    └── step-11-report.md              ← Report & restart
 ```
 
 Each step is a separate reference file. Read before executing.

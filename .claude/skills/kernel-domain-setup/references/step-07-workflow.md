@@ -1,4 +1,4 @@
-# Step 6: Read Workflow
+# Step 7: Read Workflow
 
 Read workflow skill files to understand command execution:
 

@@ -1,4 +1,4 @@
-# Step 5: Understand Enforcement
+# Step 6: Understand Enforcement
 
 The kernel uses two enforcement layers:
 
