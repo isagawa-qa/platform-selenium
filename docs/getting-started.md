@@ -208,6 +208,81 @@ def test_user_login(self):
     assert self.login_page.is_logged_in()
 ```
 
+## macOS Setup
+
+### Install dependencies
+
+```bash
+# Install Homebrew if you don't have it
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Python and Node.js
+brew install python@3.12 node
+
+# Install Chrome (if not already installed)
+brew install --cask google-chrome
+
+# Install Claude Code
+npm install -g @anthropic-ai/claude-code
+```
+
+### Clone and set up
+
+```bash
+git clone https://github.com/isagawa-qa/platform.git
+cd platform
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+### Install Playwright MCP
+
+The platform uses Playwright MCP for element discovery during test generation. The `.mcp.json` in the repo is pre-configured:
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
+```
+
+Install the Playwright browsers:
+
+```bash
+npx playwright install
+```
+
+If you get a macOS Gatekeeper warning when running ChromeDriver:
+
+```bash
+# Remove quarantine attribute from ChromeDriver
+xattr -d com.apple.quarantine $(which chromedriver)
+```
+
+Or if using webdriver-manager (which the platform uses by default), it handles driver downloads automatically — but you may still need to allow it in **System Settings > Privacy & Security** on first run.
+
+### Verify setup
+
+```bash
+# Verify Python
+python3 --version   # Should be 3.10+
+
+# Verify Node
+node --version      # Should be 18+
+
+# Verify Playwright MCP
+npx @playwright/mcp@latest --help
+
+# Start Claude Code
+claude
+```
+
 ## Windows Users
 
 The `.mcp.json` is configured for cross-platform use with `npx`. If you encounter issues with the Playwright MCP server on Windows, create a `.mcp.json` override:
