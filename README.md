@@ -8,6 +8,8 @@ Most AI tools watch what happened and report after the fact. Isagawa **enforces 
 
 This isn't AI governance. It's **AI execution management**.
 
+https://github.com/user-attachments/assets/b9fc88b5-5fd4-4308-b248-17fbcc47b637
+
 ---
 
 ## The Problem
