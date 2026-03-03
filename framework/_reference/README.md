@@ -10,10 +10,10 @@
 
 | Layer | File to Read | Learn |
 |-------|--------------|-------|
-| **POM** | `pages/inquiry_form_page.py` | Locators, atomic methods, state-check methods, return self |
-| **Task** | `tasks/reference_tasks.py` | @autologger, POM composition, no returns, fluent API |
-| **Role** | `roles/reference_role.py` | @autologger, Task composition, workflow orchestration |
-| **Test** | `tests/test_reference_workflow.py` | AAA pattern, fixtures, Role calls, POM assertions |
+| **POM** | `pages/employees_page.py` | Locators, atomic methods, state-check methods, return self |
+| **Task** | `tasks/employee_management_tasks.py` | @autologger, POM composition, no returns, fluent API |
+| **Role** | `roles/employee_manager.py` | @autologger, Task composition, workflow orchestration |
+| **Test** | `tests/test_e2e_create_employee_and_assign_task.py` | AAA pattern, fixtures, Role calls, POM assertions |
 
 ---
 
@@ -49,9 +49,9 @@
 ### Test
 ```python
 # @autologger("Test") decorator
-# Call ONE Role workflow method
+# Call Role workflow methods (chain when workflow requires it)
 # Assert via Page Object state-check methods
-# NO orchestration (Role handles workflow)
+# NO test-level orchestration (belongs in Role layer)
 ```
 
 ---
@@ -60,24 +60,24 @@
 
 ```
 _reference/
-├── README.md                      ← You are here
+├── README.md                                          ← You are here
 ├── __init__.py
 ├── pages/
 │   ├── __init__.py
-│   ├── inquiry_form_page.py       ← POM pattern
-│   ├── customer_search_page.py
-│   ├── customer_details_page.py
-│   ├── contacts_page.py
-│   └── address_page.py
+│   ├── login_page.py                                  ← POM pattern (login)
+│   ├── employees_page.py                              ← POM pattern (employees)
+│   └── tasks_page.py                                  ← POM pattern (tasks)
 ├── tasks/
 │   ├── __init__.py
-│   └── reference_tasks.py         ← Task pattern
+│   ├── employee_management_tasks.py                   ← Task pattern (employee mgmt)
+│   └── task_management_tasks.py                       ← Task pattern (task mgmt)
 ├── roles/
 │   ├── __init__.py
-│   └── reference_role.py          ← Role pattern
+│   ├── employee_manager.py                            ← Role pattern (employee manager)
+│   └── task_manager.py                                ← Role pattern (task manager)
 └── tests/
     ├── __init__.py
-    └── test_reference_workflow.py ← Test pattern
+    └── test_e2e_create_employee_and_assign_task.py    ← Test pattern (integration)
 ```
 
 ---
@@ -90,8 +90,9 @@ _reference/
 | NO return values from Tasks/Roles | Task, Role |
 | Return `self` from POM atomic methods | POM |
 | Assert via POM state-check methods | Test |
-| ONE Role workflow call per test | Test |
-| @autologger on Task/Role/Test methods | All |
+| `@autologger` on Task/Role/Test methods | All |
+| Multi-role workflows supported | Test |
+| `_continue` variants skip login for shared sessions | Role |
 
 ---
 

@@ -123,7 +123,7 @@ except:                   # Never bare except
 | POM | `self` | Locators, atomic methods, state-check methods |
 | Task | `None` | Workflow orchestration, @autologger decorator |
 | Role | `None` | Multi-task workflows, @autologger decorator |
-| Test | N/A | ONE role call, assertions via POM state methods |
+| Test | N/A | Role workflow calls (no test-level orchestration), assertions via POM state methods |
 
 ---
 

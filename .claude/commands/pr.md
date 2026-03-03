@@ -51,7 +51,7 @@ Scan all framework layers:
 - [x] Uses POM state-check methods in assertions
 - [ ] VIOLATION: Contains `By.` imports or locator tuples
 - [ ] VIOLATION: Imports from tasks/ directly
-- [ ] VIOLATION: Calls multiple Role methods (should call ONE workflow method)
+- [ ] VIOLATION: Test does orchestration that belongs in Role layer (chaining multiple Role methods is OK when workflow requires it — e.g., capturing intermediate state between steps)
 
 ### 3. Senior SDET Quality Checks
 
