@@ -1,13 +1,17 @@
-# Step 8: Build Protocol
+# Step 7: Build Protocol
 
-Create `.claude/protocols/qa-protocol.md` as a **pure index** (no content duplication).
+Create `.claude/protocols/[domain]-protocol.md` as a **pure index** (no content duplication).
+
+## Use Confirmed References
+
+Build the protocol using the reference files confirmed by user in Step 3. The protocol indexes these actual files - don't use placeholder paths.
 
 ## Protocol Template
 
 ```markdown
-# QA Protocol
+# [Domain] Protocol
 
-**Domain:** qa
+**Domain:** [domain]
 **Type:** Indexed
 **Created:** [timestamp]
 
@@ -16,43 +20,25 @@ Create `.claude/protocols/qa-protocol.md` as a **pure index** (no content duplic
 ## References
 
 ### Code Patterns
-| Layer | Reference |
-|-------|-----------|
-| POM | `framework/_reference/pages/*.py` |
-| Task | `framework/_reference/tasks/*.py` |
-| Role | `framework/_reference/roles/*.py` |
-| Test | `framework/_reference/tests/*.py` |
+| Category | Reference |
+|----------|-----------|
+| [category] | `[confirmed_reference_path]` |
+| [category] | `[confirmed_reference_path]` |
 
-### Architecture + Patterns + Anti-Patterns
-→ `framework/_reference/README.md`
+*These are the files confirmed in Step 3 as canonical examples.*
 
-### Infrastructure
+### Architecture + Patterns
+→ `[confirmed_architecture_doc_if_exists]`
+
+### Workflow (if applicable)
 | File | Purpose |
 |------|---------|
-| `framework/interfaces/browser_interface.py` | Selenium wrapper |
-| `framework/resources/utilities/autologger.py` | Logging decorator |
-| `framework/resources/config/environment_config.json` | Environment URLs |
-
-### Workflow (5-Step)
-| File | Purpose |
-|------|---------|
-| `.claude/skills/qa-management-layer/SKILL.md` | Entry point |
-| `.claude/skills/qa-management-layer/workflow.md` | 5-step index, data flow |
-| `.claude/skills/qa-management-layer/gate-contract.md` | Validation contract |
-| `.claude/skills/qa-management-layer/steps/*.md` | Step criteria |
-
-### Test Setup
-| File | Purpose |
-|------|---------|
-| `tests/conftest.py` | Pytest fixtures |
-| `tests/data/test_users.json` | Test credentials |
+| `.claude/skills/[domain]-*/SKILL.md` | Entry point |
 
 ### Entry Points
 | Command | Purpose |
 |---------|---------|
-| `/qa-workflow` | Production mode |
-| `/qa-workflow-dev` | Development mode |
-| `/run-test` | Execute tests |
+| `/[command]` | [description] |
 
 ### Lessons Learned
 → `.claude/lessons/lessons.md`
@@ -62,16 +48,20 @@ Create `.claude/protocols/qa-protocol.md` as a **pure index** (no content duplic
 *Protocol is an INDEX. Agent reads referenced files during /kernel/anchor.*
 ```
 
+## Key Principle
+
+The protocol points to **actual files that exist** - the ones user confirmed as good references. Don't create placeholder sections for things that don't exist in this repo.
+
 ## How Commands Execute via Protocol
 
-When user types `/qa-workflow`:
+When user types `/[command]`:
 
 ```
 1. Command wrapper invokes /kernel/anchor
 2. Anchor reads this protocol
-3. Protocol points to qa-management-layer
-4. Agent reads qa-management-layer/workflow.md
-5. Agent executes 5 steps, self-enforcing validation per gate-contract
+3. Protocol points to reference files
+4. Agent reads actual files
+5. Agent executes, self-enforcing patterns from references
 6. On failure: /kernel/learn captures lesson
 7. On success: /kernel/complete resets counter
 ```
@@ -79,9 +69,9 @@ When user types `/qa-workflow`:
 ## Critical Rules
 
 - Do NOT copy code examples into protocol
-- Do NOT duplicate workflow content
+- Do NOT duplicate content
+- Only index files that actually exist
 - Agent reads actual reference files during `/kernel/anchor`
-- Agent self-enforces validation criteria while executing workflow
 - This keeps protocol small and prevents drift
 
 ## Create Lessons Folder
@@ -105,7 +95,7 @@ Initialize `.claude/lessons/lessons.md` with:
 
 ---
 
-## Step 8b: Adaptive Indexing Rule
+## Step 7b: Adaptive Indexing Rule
 
 **Threshold: 200 lines**
 
@@ -117,7 +107,7 @@ When any referenced file exceeds 200 lines:
 
 ---
 
-## Step 8c: Dynamic Category Creation
+## Step 7c: Dynamic Category Creation
 
 When content doesn't fit existing categories:
 
