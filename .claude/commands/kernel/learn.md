@@ -9,20 +9,41 @@ Update protocol AND hooks after fixing any failure. Make the same mistake imposs
    - Root cause
    - How it was fixed
 
-2. **Update protocol:**
+2. **Record lesson:**
 
-   Open `.claude/protocols/[domain]-protocol.md` and add to "Lessons Learned":
+   Open `.claude/lessons/lessons.md` and append:
 
    ```markdown
-   ### [Date] [Issue Name]
+   ## [Date] [Issue Name]
    - **Issue:** What happened
    - **Root Cause:** Why it happened
    - **Fix:** How it was resolved
-   - **Anti-Pattern Added:** What to avoid
-   - **Quality Gate Added:** What to check
+   - **Anti-Pattern Added:** What to avoid (if applicable)
+   - **Quality Gate Added:** What to check (if applicable)
    ```
 
-3. **Update hooks if enforceable:**
+3. **Update reference files:**
+
+   If the lesson reveals a pattern worth codifying:
+
+   a. **Read the protocol index** (`.claude/protocols/[domain]-protocol.md`) to discover what reference files exist
+   b. **Check for domain spec** — look for `.claude/skills/` domain spec folders or domain spec references in the protocol index
+   c. **Follow the appropriate path:**
+
+   **Domain spec present** — the spec defines the reference structure. Follow it:
+   - Match the lesson to the spec's reference files (anti-patterns, quality gates, etc.)
+   - Write directly — domain spec mappings are pre-approved by the spec author
+   - Stay consistent with the spec's existing format and conventions
+
+   **No domain spec** — generic/vanilla kernel. Discover dynamically:
+   - Determine which reference file the lesson applies to (if any)
+   - Propose the update to the user — state which file, what you'd add, and why
+   - Only write after user approves
+   - If no existing reference file fits, propose a new one
+
+   The human is the source of truth. Domain specs encode pre-approved human expertise.
+
+4. **Update hooks if enforceable:**
 
    If this failure could be automatically prevented:
 
@@ -31,12 +52,12 @@ Update protocol AND hooks after fixing any failure. Make the same mistake imposs
    PROTECTED_PATHS['new/path/'] = 'new_state_key'
    ```
 
-4. **Create new command if recurring:**
+5. **Create new command if recurring:**
 
    If this is a pattern that needs checking:
    - Create `.claude/commands/[domain]-check-[issue].md`
 
-5. **Update state:**
+6. **Update state:**
 
    Update `.claude/state/session_state.json`:
    ```json
@@ -57,7 +78,7 @@ Update protocol AND hooks after fixing any failure. Make the same mistake imposs
    }
    ```
 
-6. **Report:**
+7. **Report:**
    ```
    LESSON RECORDED
 
@@ -65,9 +86,9 @@ Update protocol AND hooks after fixing any failure. Make the same mistake imposs
    Root Cause: [why]
    Fix: [how resolved]
 
-   Protocol updated:
-   - Added anti-pattern: [description]
-   - Added quality gate: [description]
+   Lesson file updated: .claude/lessons/lessons.md
+   Reference files updated:
+   - [file]: [what was added]
 
    Hooks updated: [yes/no]
    - [what was added if yes]

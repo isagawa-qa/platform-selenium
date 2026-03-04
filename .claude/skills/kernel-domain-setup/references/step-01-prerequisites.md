@@ -2,71 +2,40 @@
 
 Before domain setup, verify all dependencies are installed and configured.
 
-## MCP Servers
-
-### Playwright MCP (Required)
+## MCP Servers (if applicable)
 
 Check if configured in `.claude/mcp.json`:
 
 ```json
 {
   "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": ["@playwright/mcp"]
+    "[server-name]": {
+      "command": "...",
+      "args": ["..."]
     }
   }
 }
 ```
 
 **If not configured:**
-1. Create/update `.claude/mcp.json` with above config
+1. Create/update `.claude/mcp.json` with required config
 2. Set restart state (see below)
 3. Stop and wait for restart
 
-### QA Automation MCP (If applicable)
+## Dependencies
 
-Check if configured:
+Check for dependency files and install:
 
-```json
-{
-  "mcpServers": {
-    "qa-automation": {
-      "command": "python",
-      "args": ["server.py"],
-      "cwd": "./mcp_server"
-    }
-  }
-}
-```
-
-## Python Dependencies
-
-Check `requirements.txt` exists and install:
-
-```bash
-pip install -r requirements.txt
-```
-
-### Required packages:
-- selenium
-- pytest
-- pytest-html
-- webdriver-manager
-- faker
-
-## Browser Driver
-
-Verify ChromeDriver or use webdriver-manager:
-
-```python
-# framework/resources/chromedriver/driver.py should handle this
-from webdriver_manager.chrome import ChromeDriverManager
-```
+| File | Action |
+|------|--------|
+| `package.json` | `npm install` |
+| `requirements.txt` | `pip install -r requirements.txt` |
+| `go.mod` | `go mod download` |
+| `Cargo.toml` | `cargo build` |
 
 ## Settings
 
-Verify `.claude/settings.local.json` has MCP servers enabled:
+Verify `.claude/settings.local.json` has MCP servers enabled (if using MCP):
 
 ```json
 {
@@ -78,9 +47,8 @@ Verify `.claude/settings.local.json` has MCP servers enabled:
 
 | Dependency | Check | Action if Missing |
 |------------|-------|-------------------|
-| Playwright MCP | `.claude/mcp.json` has playwright | Add config → restart |
-| Python deps | `pip list` shows selenium, pytest | `pip install -r requirements.txt` |
-| Browser driver | ChromeDriver accessible | webdriver-manager handles this |
+| MCP servers | `.claude/mcp.json` configured | Add config → restart |
+| Dependencies | Package manager files exist | Install dependencies |
 | MCP enabled | settings.local.json configured | Add enableAllProjectMcpServers |
 
 ---
@@ -96,7 +64,7 @@ Create/update `.claude/state/session_state.json`:
 ```json
 {
   "session_started": true,
-  "domain": "qa",
+  "domain": "[domain]",
   "needs_restart": true,
   "resume_after_restart": "domain-setup",
   "resume_step": 2,
@@ -143,10 +111,9 @@ If all dependencies already configured:
 ```
 PREREQUISITES: All configured
 
-✓ Playwright MCP configured
-✓ Python dependencies installed
-✓ Browser driver available
-✓ MCP enabled in settings
+✓ Dependencies installed
+✓ MCP configured (if applicable)
+✓ Settings configured
 
 Proceeding to Step 2...
 ```
