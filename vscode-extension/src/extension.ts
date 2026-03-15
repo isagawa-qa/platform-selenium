@@ -63,6 +63,13 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Kernel state status bar
   setupKernelStatusBar(context, workspaceRoot);
+
+  // Mission Control webview
+  context.subscriptions.push(
+    vscode.commands.registerCommand('platformSelenium.openMissionControl', () => {
+      MissionControlPanel.createOrShow(workspaceRoot);
+    })
+  );
 }
 
 export function deactivate(): void {}
@@ -171,6 +178,339 @@ function updateKernelStatusBar(
   }
 
   item.show();
+}
+
+// ---------------------------------------------------------------------------
+// Mission Control webview
+// ---------------------------------------------------------------------------
+
+class MissionControlPanel {
+  static currentPanel: MissionControlPanel | undefined;
+
+  private readonly _panel: vscode.WebviewPanel;
+  private readonly _workspaceRoot: string;
+  private readonly _disposables: vscode.Disposable[] = [];
+  private _eventLineCount = 0;
+
+  static createOrShow(workspaceRoot: string): void {
+    const column = vscode.window.activeTextEditor
+      ? vscode.window.activeTextEditor.viewColumn
+      : undefined;
+
+    if (MissionControlPanel.currentPanel) {
+      MissionControlPanel.currentPanel._panel.reveal(column);
+      return;
+    }
+
+    const panel = vscode.window.createWebviewPanel(
+      'missionControl',
+      'Mission Control',
+      column ?? vscode.ViewColumn.One,
+      { enableScripts: true }
+    );
+
+    MissionControlPanel.currentPanel = new MissionControlPanel(panel, workspaceRoot);
+  }
+
+  private constructor(panel: vscode.WebviewPanel, workspaceRoot: string) {
+    this._panel = panel;
+    this._workspaceRoot = workspaceRoot;
+    this._panel.webview.html = this._getHtml();
+
+    this._sendState();
+    this._sendAllEvents();
+
+    // Watch state JSON files
+    const stateWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(workspaceRoot, '.claude/state/*.json')
+    );
+    stateWatcher.onDidChange(() => this._sendState(), null, this._disposables);
+    stateWatcher.onDidCreate(() => this._sendState(), null, this._disposables);
+    this._disposables.push(stateWatcher);
+
+    // Watch events.jsonl for new lines
+    const eventsWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(workspaceRoot, '.claude/state/events.jsonl')
+    );
+    eventsWatcher.onDidChange(() => this._sendNewEvents(), null, this._disposables);
+    eventsWatcher.onDidCreate(() => {
+      this._eventLineCount = 0;
+      this._sendAllEvents();
+    }, null, this._disposables);
+    this._disposables.push(eventsWatcher);
+
+    // Handle messages from webview
+    this._panel.webview.onDidReceiveMessage(
+      (msg: { command: string }) => {
+        if (msg.command === 'refresh') {
+          this._eventLineCount = 0;
+          this._sendState();
+          this._sendAllEvents();
+        }
+      },
+      null,
+      this._disposables
+    );
+
+    this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+  }
+
+  private _sendState(): void {
+    const stateDir    = path.join(this._workspaceRoot, '.claude', 'state');
+    const session     = readJsonSafe(path.join(stateDir, 'session_state.json'));
+    const domain      = typeof session.domain === 'string' ? session.domain : undefined;
+    const workflow    = domain ? readJsonSafe(path.join(stateDir, `${domain}_workflow.json`)) : {};
+
+    this._panel.webview.postMessage({
+      command:      'state',
+      domain:       domain ?? 'none',
+      anchored:     workflow.anchored === true,
+      actionsSince: typeof workflow.actions_since_anchor === 'number' ? workflow.actions_since_anchor : 0,
+      actionsLimit: typeof workflow.actions_limit        === 'number' ? workflow.actions_limit        : 10,
+      needsLearn:   session.needs_learn === true,
+      currentTask:  typeof workflow.current_task === 'string' ? workflow.current_task : null,
+      cycling:      workflow.cycling === true,
+    });
+  }
+
+  private _sendAllEvents(): void {
+    const eventsPath = path.join(this._workspaceRoot, '.claude', 'state', 'events.jsonl');
+    if (!fs.existsSync(eventsPath)) return;
+    const lines = fs.readFileSync(eventsPath, 'utf8').split('\n').filter(l => l.trim());
+    this._eventLineCount = lines.length;
+    const events = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    this._panel.webview.postMessage({ command: 'allEvents', events });
+  }
+
+  private _sendNewEvents(): void {
+    const eventsPath = path.join(this._workspaceRoot, '.claude', 'state', 'events.jsonl');
+    if (!fs.existsSync(eventsPath)) return;
+    const lines = fs.readFileSync(eventsPath, 'utf8').split('\n').filter(l => l.trim());
+    if (lines.length < this._eventLineCount) {
+      // File rotated — reload all
+      this._eventLineCount = 0;
+      this._sendAllEvents();
+      return;
+    }
+    const newLines = lines.slice(this._eventLineCount);
+    this._eventLineCount = lines.length;
+    const events = newLines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    if (events.length > 0) {
+      this._panel.webview.postMessage({ command: 'appendEvents', events });
+    }
+  }
+
+  private _getHtml(): string {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission Control</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    color: var(--vscode-foreground);
+    background: var(--vscode-editor-background);
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+  #header {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #header h1 {
+    font-size: 12px; font-weight: 700; margin: 0;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  #header-controls { display: flex; gap: 6px; }
+  button {
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border: none; padding: 3px 8px; cursor: pointer;
+    border-radius: 2px; font-size: 13px;
+  }
+  button:hover { background: var(--vscode-button-secondaryHoverBackground); }
+  button.active { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+  #status {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    font-size: 12px; display: flex; gap: 14px; align-items: center;
+    flex-shrink: 0;
+    background: var(--vscode-sideBar-background);
+  }
+  .badge { padding: 1px 7px; border-radius: 10px; font-size: 11px; }
+  .badge-green  { background: #1a4a1a; color: #4ec94e; }
+  .badge-yellow { background: #4a3a00; color: #f5c518; }
+  .badge-red    { background: #4a1a1a; color: #f44747; }
+  .badge-gray   { background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); }
+  #events-label {
+    padding: 5px 12px 3px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--vscode-descriptionForeground);
+    flex-shrink: 0;
+  }
+  #events {
+    flex: 1; overflow-y: auto;
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 12px;
+  }
+  #empty { padding: 10px 12px; color: var(--vscode-descriptionForeground); font-style: italic; }
+  .row {
+    padding: 2px 12px; display: flex; gap: 8px; align-items: baseline;
+    border-left: 2px solid transparent;
+  }
+  .row:hover { background: var(--vscode-list-hoverBackground); }
+  .row.action        { border-left-color: #444; color: var(--vscode-foreground); }
+  .row.test_pass     { border-left-color: #2a6a2a; color: #4ec94e; }
+  .row.test_fail     { border-left-color: #6a2a2a; color: #f44747; }
+  .row.blocked       { border-left-color: #6a2a2a; color: #f44747; }
+  .row.anchor        { border-left-color: #1a4a6a; color: #569cd6; }
+  .row.learn         { border-left-color: #1a4a6a; color: #569cd6; }
+  .row.session_start { border-left-color: #555; color: #888; font-style: italic; }
+  .ts     { color: var(--vscode-descriptionForeground); width: 68px; flex-shrink: 0; font-size: 11px; }
+  .icon   { width: 14px; flex-shrink: 0; }
+  .kind   { width: 72px; flex-shrink: 0; font-weight: 500; }
+  .detail { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--vscode-descriptionForeground); }
+  .row.test_pass .detail, .row.test_fail .detail,
+  .row.blocked .detail,   .row.anchor .detail, .row.learn .detail { color: inherit; }
+</style>
+</head>
+<body>
+<div id="header">
+  <h1>Mission Control</h1>
+  <div id="header-controls">
+    <button id="btn-pause" title="Pause auto-scroll">⏸</button>
+    <button id="btn-refresh" title="Refresh from disk">↺</button>
+  </div>
+</div>
+<div id="status">
+  <span id="st-anchor" class="badge badge-gray">—</span>
+  <span id="st-actions">—</span>
+  <span id="st-domain" style="color:var(--vscode-descriptionForeground)">—</span>
+  <span id="st-task"   style="color:var(--vscode-descriptionForeground)"></span>
+</div>
+<div id="events-label">Live Events</div>
+<div id="events"><div id="empty">No events yet.</div></div>
+<script>
+  const vscode = acquireVsCodeApi();
+  let paused = false;
+
+  document.getElementById('btn-pause').addEventListener('click', () => {
+    paused = !paused;
+    const btn = document.getElementById('btn-pause');
+    btn.classList.toggle('active', paused);
+    btn.title = paused ? 'Resume auto-scroll' : 'Pause auto-scroll';
+  });
+
+  document.getElementById('btn-refresh').addEventListener('click', () => {
+    vscode.postMessage({ command: 'refresh' });
+  });
+
+  function updateStatus(msg) {
+    const anchorEl  = document.getElementById('st-anchor');
+    const actionsEl = document.getElementById('st-actions');
+    const domainEl  = document.getElementById('st-domain');
+    const taskEl    = document.getElementById('st-task');
+
+    domainEl.textContent = 'Domain: ' + msg.domain;
+
+    if (msg.needsLearn) {
+      anchorEl.textContent = '✗ learn needed';
+      anchorEl.className = 'badge badge-red';
+    } else if (!msg.anchored) {
+      anchorEl.textContent = '✗ anchor needed';
+      anchorEl.className = 'badge badge-red';
+    } else {
+      anchorEl.textContent = '⚓ Anchored';
+      anchorEl.className = 'badge badge-green';
+    }
+
+    const pct = msg.actionsLimit > 0 ? msg.actionsSince / msg.actionsLimit : 0;
+    actionsEl.textContent = msg.actionsSince + '/' + msg.actionsLimit + ' actions';
+    actionsEl.style.color = pct >= 0.8 ? '#f5c518' : '';
+
+    taskEl.textContent = (msg.cycling && msg.currentTask) ? 'Task: ' + msg.currentTask : '';
+  }
+
+  function icon(type) {
+    switch (type) {
+      case 'test_pass': return '✓';
+      case 'test_fail': return '✗';
+      case 'blocked':   return '✗';
+      case 'anchor':    return '⚓';
+      case 'learn':     return '★';
+      default:          return '·';
+    }
+  }
+
+  function kindLabel(type, tool) {
+    return type === 'action' ? (tool || 'action') : type;
+  }
+
+  function shortDetail(detail) {
+    if (!detail) return '';
+    const parts = detail.split('/');
+    return parts.length > 2 ? parts.slice(-2).join('/') : detail;
+  }
+
+  function fmtTs(ts) {
+    try {
+      return new Date(ts).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch { return ts || ''; }
+  }
+
+  function makeRow(ev) {
+    const row = document.createElement('div');
+    row.className = 'row ' + (ev.type || 'action');
+    const detailFull  = ev.detail || '';
+    const detailShort = shortDetail(detailFull);
+    row.innerHTML =
+      '<span class="ts">'     + fmtTs(ev.ts)                                         + '</span>' +
+      '<span class="icon">'   + icon(ev.type)                                         + '</span>' +
+      '<span class="kind">'   + kindLabel(ev.type, ev.tool)                           + '</span>' +
+      '<span class="detail" title="' + detailFull.replace(/"/g, '&quot;') + '">' + detailShort + '</span>';
+    return row;
+  }
+
+  function appendEvents(events) {
+    const container = document.getElementById('events');
+    const empty = document.getElementById('empty');
+    if (empty) empty.remove();
+    for (const ev of events) container.appendChild(makeRow(ev));
+    if (!paused) container.scrollTop = container.scrollHeight;
+  }
+
+  function setAllEvents(events) {
+    const container = document.getElementById('events');
+    container.innerHTML = events.length === 0 ? '<div id="empty">No events yet.</div>' : '';
+    for (const ev of events) container.appendChild(makeRow(ev));
+    if (!paused) container.scrollTop = container.scrollHeight;
+  }
+
+  window.addEventListener('message', ev => {
+    const msg = ev.data;
+    if      (msg.command === 'state')        updateStatus(msg);
+    else if (msg.command === 'allEvents')    setAllEvents(msg.events);
+    else if (msg.command === 'appendEvents') appendEvents(msg.events);
+  });
+</script>
+</body>
+</html>`;
+  }
+
+  dispose(): void {
+    MissionControlPanel.currentPanel = undefined;
+    this._panel.dispose();
+    while (this._disposables.length) {
+      const d = this._disposables.pop();
+      if (d) d.dispose();
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

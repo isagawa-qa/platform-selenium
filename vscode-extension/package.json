@@ -18,6 +18,11 @@
         "command": "platformSelenium.openKernelState",
         "title": "Open Kernel State",
         "category": "Platform Selenium"
+      },
+      {
+        "command": "platformSelenium.openMissionControl",
+        "title": "Mission Control: Open",
+        "category": "Platform Selenium"
       }
     ],
     "configuration": {
