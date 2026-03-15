@@ -23,9 +23,11 @@ import sys
 from pathlib import Path
 from datetime import datetime, timezone
 
-STATE_DIR = Path('.claude/state')
+STATE_DIR = Path('/Users/briandawson/workspace/platform-selenium/.claude/state')
 SESSION_STATE = STATE_DIR / 'session_state.json'
-EVENTS_LOG = STATE_DIR / 'events.jsonl'
+EVENTS_LOG    = STATE_DIR / 'events.jsonl'
+INBOX_PATH    = STATE_DIR / 'inbox.json'
+OUTBOX_PATH   = STATE_DIR / 'outbox.json'
 EVENTS_ROTATION_LIMIT = 1000
 
 
@@ -91,6 +93,37 @@ Command: {fix_command}
     sys.exit(2)
 
 
+def check_inbox():
+    """Check for UI-requested skill. Returns (skill, args) if pending, else None."""
+    if not INBOX_PATH.exists():
+        return None
+    try:
+        inbox = json.loads(INBOX_PATH.read_text())
+        status = inbox.get('status')
+        if status == 'pending':
+            skill = inbox.get('skill', '')
+            args  = inbox.get('args', '')
+            inbox['status'] = 'processing'
+            inbox['processing_at'] = datetime.now(timezone.utc).isoformat()
+            INBOX_PATH.write_text(json.dumps(inbox, indent=2))
+            emit_event('skill_requested', skill=skill)
+            return skill, args
+        elif status == 'processing':
+            # Skill ran; mark done and write outbox
+            skill = inbox.get('skill', '')
+            now   = datetime.now(timezone.utc).isoformat()
+            inbox['status'] = 'done'
+            inbox['done_at'] = now
+            INBOX_PATH.write_text(json.dumps(inbox, indent=2))
+            OUTBOX_PATH.write_text(json.dumps(
+                {'skill': skill, 'status': 'done', 'completed_at': now}, indent=2
+            ))
+            emit_event('skill_complete', skill=skill)
+    except Exception:
+        pass
+    return None
+
+
 def is_safe_bash(command: str) -> bool:
     """Check if bash command is read-only/safe."""
     cmd = command.strip().lower()
@@ -137,6 +170,17 @@ def main():
             fix_command="/kernel/session-start",
             fix_description="This initializes the session",
             tool=tool_name
+        )
+
+    # Inbox gate: UI-requested skill takes priority (checked after session gate)
+    inbox_result = check_inbox()
+    if inbox_result:
+        skill, args = inbox_result
+        smart_block(
+            missing=f"UI skill request: {skill}",
+            fix_command=skill,
+            fix_description=f"Invoke {skill} as requested via Mission Control UI",
+            tool=tool_name, skill=skill
         )
 
     # Gate 2: Needs learn? (must invoke learn before continuing)

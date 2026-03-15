@@ -241,11 +241,26 @@ class MissionControlPanel {
 
     // Handle messages from webview
     this._panel.webview.onDidReceiveMessage(
-      (msg: { command: string }) => {
+      (msg: { command: string; skill?: string }) => {
         if (msg.command === 'refresh') {
           this._eventLineCount = 0;
           this._sendState();
           this._sendAllEvents();
+        } else if (msg.command === 'invokeSkill' && msg.skill) {
+          const inboxPath = path.join(this._workspaceRoot, '.claude', 'state', 'inbox.json');
+          fs.writeFileSync(inboxPath, JSON.stringify({
+            skill: msg.skill, args: '',
+            requested_at: new Date().toISOString(),
+            status: 'pending'
+          }, null, 2));
+        } else if (msg.command === 'viewState') {
+          const domain = readKernelDomain(this._workspaceRoot);
+          const target = domain
+            ? path.join(this._workspaceRoot, '.claude', 'state', `${domain}_workflow.json`)
+            : path.join(this._workspaceRoot, '.claude', 'state', 'session_state.json');
+          if (fs.existsSync(target)) {
+            vscode.window.showTextDocument(vscode.Uri.file(target));
+          }
         }
       },
       null,
@@ -260,16 +275,22 @@ class MissionControlPanel {
     const session     = readJsonSafe(path.join(stateDir, 'session_state.json'));
     const domain      = typeof session.domain === 'string' ? session.domain : undefined;
     const workflow    = domain ? readJsonSafe(path.join(stateDir, `${domain}_workflow.json`)) : {};
+    const inbox       = readJsonSafe(path.join(stateDir, 'inbox.json'));
+    const outbox      = readJsonSafe(path.join(stateDir, 'outbox.json'));
 
     this._panel.webview.postMessage({
-      command:      'state',
-      domain:       domain ?? 'none',
-      anchored:     workflow.anchored === true,
-      actionsSince: typeof workflow.actions_since_anchor === 'number' ? workflow.actions_since_anchor : 0,
-      actionsLimit: typeof workflow.actions_limit        === 'number' ? workflow.actions_limit        : 10,
-      needsLearn:   session.needs_learn === true,
-      currentTask:  typeof workflow.current_task === 'string' ? workflow.current_task : null,
-      cycling:      workflow.cycling === true,
+      command:        'state',
+      domain:         domain ?? 'none',
+      anchored:       workflow.anchored === true,
+      actionsSince:   typeof workflow.actions_since_anchor === 'number' ? workflow.actions_since_anchor : 0,
+      actionsLimit:   typeof workflow.actions_limit        === 'number' ? workflow.actions_limit        : 10,
+      needsLearn:     session.needs_learn === true,
+      currentTask:    typeof workflow.current_task === 'string' ? workflow.current_task : null,
+      cycling:        workflow.cycling === true,
+      inboxStatus:    typeof inbox.status === 'string'  ? inbox.status  : null,
+      inboxSkill:     typeof inbox.skill  === 'string'  ? inbox.skill   : null,
+      outboxStatus:   typeof outbox.status === 'string' ? outbox.status : null,
+      outboxSkill:    typeof outbox.skill  === 'string' ? outbox.skill  : null,
     });
   }
 
@@ -348,6 +369,21 @@ class MissionControlPanel {
   .badge-yellow { background: #4a3a00; color: #f5c518; }
   .badge-red    { background: #4a1a1a; color: #f44747; }
   .badge-gray   { background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); }
+  #skills {
+    padding: 5px 12px 6px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  #skills-label {
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--vscode-descriptionForeground); flex-shrink: 0; margin-right: 2px;
+  }
+  .skill-btn { font-size: 11px; padding: 2px 8px; }
+  .skill-btn.contextual { display: none; }
+  .skill-btn.contextual.visible { display: inline; }
+  .skill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  #skill-status { font-size: 11px; color: var(--vscode-descriptionForeground); }
   #events-label {
     padding: 5px 12px 3px;
     font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
@@ -394,6 +430,15 @@ class MissionControlPanel {
   <span id="st-domain" style="color:var(--vscode-descriptionForeground)">—</span>
   <span id="st-task"   style="color:var(--vscode-descriptionForeground)"></span>
 </div>
+<div id="skills">
+  <span id="skills-label">Skills</span>
+  <button class="skill-btn contextual" id="sk-anchor" data-skill="/kernel/anchor" title="/kernel/anchor">⚓ Anchor</button>
+  <button class="skill-btn contextual" id="sk-learn"  data-skill="/kernel/learn"  title="/kernel/learn">★ Learn</button>
+  <button class="skill-btn"            id="sk-qa"     data-skill="/qa-workflow"    title="/qa-workflow">⚙ QA</button>
+  <button class="skill-btn"            id="sk-tests"  data-skill="/run-test"       title="/run-test">▶ Tests</button>
+  <button class="skill-btn"            id="sk-state"  data-skill="__view_state"    title="Open state file">👁 State</button>
+  <span id="skill-status"></span>
+</div>
 <div id="events-label">Live Events</div>
 <div id="events"><div id="empty">No events yet.</div></div>
 <script>
@@ -410,6 +455,40 @@ class MissionControlPanel {
   document.getElementById('btn-refresh').addEventListener('click', () => {
     vscode.postMessage({ command: 'refresh' });
   });
+
+  // Skill palette
+  let _lastOutboxSkill = null;
+  document.querySelectorAll('.skill-btn[data-skill]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const skill = btn.getAttribute('data-skill');
+      if (skill === '__view_state') {
+        vscode.postMessage({ command: 'viewState' });
+      } else {
+        vscode.postMessage({ command: 'invokeSkill', skill });
+      }
+    });
+  });
+
+  function updateSkills(msg) {
+    // Contextual visibility
+    document.getElementById('sk-anchor').classList.toggle('visible', !msg.anchored && !msg.needsLearn);
+    document.getElementById('sk-learn').classList.toggle('visible',  msg.needsLearn === true);
+    // Disable all when busy
+    const busy = msg.inboxStatus === 'pending' || msg.inboxStatus === 'processing';
+    document.querySelectorAll('.skill-btn').forEach(b => { b.disabled = busy; });
+    // Status indicator
+    const statusEl = document.getElementById('skill-status');
+    if (busy) {
+      statusEl.textContent = 'Running ' + (msg.inboxSkill || '…');
+    } else if (msg.outboxStatus === 'done' && msg.outboxSkill && msg.outboxSkill !== _lastOutboxSkill) {
+      _lastOutboxSkill = msg.outboxSkill;
+      statusEl.textContent = '✓ ' + msg.outboxSkill;
+      setTimeout(() => { if (statusEl.textContent.startsWith('✓')) statusEl.textContent = ''; }, 3000);
+    } else if (!busy) {
+      // Clear if not already showing a recent completion
+      if (!statusEl.textContent.startsWith('✓')) statusEl.textContent = '';
+    }
+  }
 
   function updateStatus(msg) {
     const anchorEl  = document.getElementById('st-anchor');
@@ -494,7 +573,7 @@ class MissionControlPanel {
 
   window.addEventListener('message', ev => {
     const msg = ev.data;
-    if      (msg.command === 'state')        updateStatus(msg);
+    if      (msg.command === 'state')        { updateStatus(msg); updateSkills(msg); }
     else if (msg.command === 'allEvents')    setAllEvents(msg.events);
     else if (msg.command === 'appendEvents') appendEvents(msg.events);
   });
