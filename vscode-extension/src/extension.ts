@@ -70,6 +70,75 @@ export function activate(context: vscode.ExtensionContext): void {
       MissionControlPanel.createOrShow(workspaceRoot);
     })
   );
+
+  // Help
+  context.subscriptions.push(
+    vscode.commands.registerCommand('platformSelenium.help', () => showHelpQuickPick())
+  );
+}
+
+function showHelpQuickPick(): void {
+  vscode.window.showQuickPick([
+    {
+      label: '$(dashboard) Mission Control: Open',
+      description: 'Command palette → "Mission Control: Open"',
+      detail: 'Live event timeline + kernel state + skill palette. Watches .claude/state/events.jsonl in real-time.',
+    },
+    {
+      label: '$(anchor) Status bar  ⚓ N/10',
+      description: 'Bottom-right of VS Code',
+      detail: 'Anchored state + action counter. Green = ok, Yellow = 80%+ of limit, Red = anchor/learn needed. Click to open state file.',
+    },
+    {
+      label: '$(anchor) Anchor  —  /kernel/anchor',
+      description: 'Skill button · shown when unanchored',
+      detail: 'Re-reads protocol and resets the 10-action counter. Required every 10 Write/Edit/Bash actions or the hook blocks.',
+    },
+    {
+      label: '$(star-full) Learn  —  /kernel/learn',
+      description: 'Skill button · shown when needs_learn is true',
+      detail: 'Record a lesson after fixing a failure. Clears the needs_learn block so work can continue.',
+    },
+    {
+      label: '$(beaker) QA  —  /qa-workflow',
+      description: 'Skill button · always visible',
+      detail: '5-step QA test generation: discover → plan → review → build → verify.',
+    },
+    {
+      label: '$(play) Tests  —  /run-test',
+      description: 'Skill button · always visible',
+      detail: 'Run pytest with kernel protocol enforcement. Failures set needs_learn.',
+    },
+    {
+      label: '$(eye) State  —  view state',
+      description: 'Skill button · always visible',
+      detail: 'Opens domain workflow JSON (or session_state.json) in the editor for direct inspection.',
+    },
+    {
+      label: '$(circle-filled) Event colors',
+      description: 'Live events panel',
+      detail: 'Green = test_pass  |  Red = blocked / test_fail  |  Blue = anchor / learn  |  Dim = normal action',
+    },
+    {
+      label: '$(debug-pause) Pause  /  $(refresh) Refresh',
+      description: 'Header buttons in Mission Control',
+      detail: 'Pause stops auto-scroll so you can read history. Refresh reloads all state + events from disk.',
+    },
+    {
+      label: '$(mail) Inbox pattern',
+      description: 'How skill buttons trigger the agent',
+      detail: 'Click button → extension writes inbox.json (pending) → hook blocks next agent action → agent invokes the skill → outbox confirms done.',
+    },
+    {
+      label: '$(question) Help  —  Platform Selenium: Help',
+      description: 'Command palette · this screen',
+      detail: 'Also accessible via the ? button inside Mission Control.',
+    },
+  ], {
+    title: 'Platform Selenium — Help',
+    matchOnDescription: true,
+    matchOnDetail: true,
+  });
 }
 
 export function deactivate(): void {}
@@ -369,6 +438,30 @@ class MissionControlPanel {
   .badge-yellow { background: #4a3a00; color: #f5c518; }
   .badge-red    { background: #4a1a1a; color: #f44747; }
   .badge-gray   { background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); }
+  /* Help modal */
+  #help-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  #help-overlay.open { display: flex; }
+  #help-modal {
+    background: var(--vscode-editor-background);
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 4px; padding: 16px 20px; max-width: 480px; width: 90%;
+    max-height: 80vh; overflow-y: auto;
+  }
+  #help-modal h2 { font-size: 13px; font-weight: 700; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  #help-modal h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--vscode-descriptionForeground); margin: 12px 0 6px; }
+  #help-modal table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #help-modal td { padding: 3px 6px 3px 0; vertical-align: top; }
+  #help-modal td:first-child { white-space: nowrap; font-weight: 500; padding-right: 10px; }
+  #help-modal .color-green  { color: #4ec94e; }
+  #help-modal .color-red    { color: #f44747; }
+  #help-modal .color-blue   { color: #569cd6; }
+  #help-modal .color-dim    { color: var(--vscode-descriptionForeground); }
+  #help-close { float: right; font-size: 16px; cursor: pointer; background: none; border: none; color: var(--vscode-foreground); padding: 0; line-height: 1; }
+  #help-close:hover { opacity: 0.7; }
   #skills {
     padding: 5px 12px 6px;
     border-bottom: 1px solid var(--vscode-panel-border);
@@ -420,15 +513,59 @@ class MissionControlPanel {
 <div id="header">
   <h1>Mission Control</h1>
   <div id="header-controls">
-    <button id="btn-pause" title="Pause auto-scroll">⏸</button>
-    <button id="btn-refresh" title="Refresh from disk">↺</button>
+    <button id="btn-pause" title="Pause / resume auto-scroll">⏸</button>
+    <button id="btn-refresh" title="Reload all state and events from disk">↺</button>
+    <button id="btn-help" title="Help — keyboard shortcut, color codes, skill buttons">?</button>
   </div>
 </div>
 <div id="status">
-  <span id="st-anchor" class="badge badge-gray">—</span>
-  <span id="st-actions">—</span>
-  <span id="st-domain" style="color:var(--vscode-descriptionForeground)">—</span>
+  <span id="st-anchor" class="badge badge-gray" title="Anchored = protocol re-read and counter reset. Required every 10 actions.">—</span>
+  <span id="st-actions" title="Actions since last anchor. Hook blocks at the limit.">—</span>
+  <span id="st-domain" style="color:var(--vscode-descriptionForeground)" title="Active kernel domain">—</span>
   <span id="st-task"   style="color:var(--vscode-descriptionForeground)"></span>
+</div>
+<div id="help-overlay">
+  <div id="help-modal">
+    <button id="help-close" title="Close">✕</button>
+    <h2>Mission Control — Help</h2>
+
+    <h3>Status Bar</h3>
+    <table>
+      <tr><td>⚓ N/10</td><td>Anchored · N actions since last anchor</td></tr>
+      <tr><td>⊘ anchor needed</td><td style="color:#f44747">Must invoke /kernel/anchor before next action</td></tr>
+      <tr><td>⊘ learn needed</td><td style="color:#f44747">Must invoke /kernel/learn after a fix</td></tr>
+      <tr><td>⚠ N/10</td><td style="color:#f5c518">80%+ of action limit — anchor soon</td></tr>
+    </table>
+
+    <h3>Event Colors</h3>
+    <table>
+      <tr><td class="color-green">Green</td><td>test_pass</td></tr>
+      <tr><td class="color-red">Red</td><td>blocked · test_fail</td></tr>
+      <tr><td class="color-blue">Blue</td><td>anchor · learn</td></tr>
+      <tr><td class="color-dim">Dim</td><td>normal Write / Edit / Bash action</td></tr>
+    </table>
+
+    <h3>Skill Buttons</h3>
+    <table>
+      <tr><td>⚓ Anchor</td><td>Shown when unanchored · re-reads protocol, resets counter</td></tr>
+      <tr><td>★ Learn</td><td>Shown when needs_learn · records lesson, clears block</td></tr>
+      <tr><td>⚙ QA</td><td>Always · 5-step QA test generation workflow</td></tr>
+      <tr><td>▶ Tests</td><td>Always · run pytest with protocol enforcement</td></tr>
+      <tr><td>👁 State</td><td>Always · open workflow JSON in editor</td></tr>
+    </table>
+
+    <h3>Inbox Pattern</h3>
+    <table>
+      <tr><td style="white-space:normal" colspan="2">Click a skill button → extension writes <code>inbox.json</code> (pending) → hook blocks the agent's next action → agent invokes the skill → hook writes <code>outbox.json</code> (done) → button re-enables.</td></tr>
+    </table>
+
+    <h3>Header Buttons</h3>
+    <table>
+      <tr><td>⏸ Pause</td><td>Stop auto-scroll (click again to resume)</td></tr>
+      <tr><td>↺ Refresh</td><td>Reload all state + events from disk</td></tr>
+      <tr><td>? Help</td><td>This panel · also: Command Palette → "Platform Selenium: Help"</td></tr>
+    </table>
+  </div>
 </div>
 <div id="skills">
   <span id="skills-label">Skills</span>
@@ -454,6 +591,19 @@ class MissionControlPanel {
 
   document.getElementById('btn-refresh').addEventListener('click', () => {
     vscode.postMessage({ command: 'refresh' });
+  });
+
+  // Help modal
+  document.getElementById('btn-help').addEventListener('click', () => {
+    document.getElementById('help-overlay').classList.add('open');
+  });
+  document.getElementById('help-close').addEventListener('click', () => {
+    document.getElementById('help-overlay').classList.remove('open');
+  });
+  document.getElementById('help-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('help-overlay')) {
+      document.getElementById('help-overlay').classList.remove('open');
+    }
   });
 
   // Skill palette

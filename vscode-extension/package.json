@@ -23,6 +23,11 @@
         "command": "platformSelenium.openMissionControl",
         "title": "Mission Control: Open",
         "category": "Platform Selenium"
+      },
+      {
+        "command": "platformSelenium.help",
+        "title": "Help",
+        "category": "Platform Selenium"
       }
     ],
     "configuration": {
