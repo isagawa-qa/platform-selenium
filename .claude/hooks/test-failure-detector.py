@@ -11,11 +11,30 @@ This enforces the learn-after-fix loop in the kernel.
 import json
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 STATE_DIR = Path('.claude/state')
 SESSION_STATE = STATE_DIR / 'session_state.json'
 DEBUG_LOG = STATE_DIR / 'hook_debug.log'
+EVENTS_LOG = STATE_DIR / 'events.jsonl'
+EVENTS_ROTATION_LIMIT = 1000
+
+
+def emit_event(event_type: str, **kwargs):
+    """Append a structured event to events.jsonl. Best-effort, never blocks."""
+    try:
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        event = {"ts": datetime.now(timezone.utc).isoformat(), "type": event_type}
+        event.update(kwargs)
+        line = json.dumps(event) + "\n"
+        if EVENTS_LOG.exists():
+            lines = EVENTS_LOG.read_text().count('\n')
+            if lines >= EVENTS_ROTATION_LIMIT:
+                EVENTS_LOG.rename(EVENTS_LOG.with_suffix('.jsonl.bak'))
+        with open(EVENTS_LOG, 'a') as f:
+            f.write(line)
+    except Exception:
+        pass
 
 
 def debug_log(message: str):
@@ -131,6 +150,7 @@ def main():
 
     if exit_code != 0:
         debug_log(f"Test FAILED - setting needs_learn=true")
+        emit_event("test_fail", command=command[:120], exit_code=exit_code)
         # Test failed - set needs_learn
         session_state = read_state(SESSION_STATE)
         session_state['needs_learn'] = True
@@ -147,6 +167,9 @@ Command: {command}
 You must invoke /kernel/learn after fixing this failure.
 Next write will be blocked until lesson is recorded.
 """)
+    else:
+        debug_log(f"Test PASSED")
+        emit_event("test_pass", command=command[:120])
 
     sys.exit(0)
 

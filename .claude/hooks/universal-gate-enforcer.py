@@ -21,9 +21,30 @@ Learn triggers (set by other mechanisms):
 import json
 import sys
 from pathlib import Path
+from datetime import datetime, timezone
 
 STATE_DIR = Path('.claude/state')
 SESSION_STATE = STATE_DIR / 'session_state.json'
+EVENTS_LOG = STATE_DIR / 'events.jsonl'
+EVENTS_ROTATION_LIMIT = 1000
+
+
+def emit_event(event_type: str, **kwargs):
+    """Append a structured event to events.jsonl. Best-effort, never blocks."""
+    try:
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        event = {"ts": datetime.now(timezone.utc).isoformat(), "type": event_type}
+        event.update(kwargs)
+        line = json.dumps(event) + "\n"
+        # Rotation: if file exceeds limit, rename and start fresh
+        if EVENTS_LOG.exists():
+            lines = EVENTS_LOG.read_text().count('\n')
+            if lines >= EVENTS_ROTATION_LIMIT:
+                EVENTS_LOG.rename(EVENTS_LOG.with_suffix('.jsonl.bak'))
+        with open(EVENTS_LOG, 'a') as f:
+            f.write(line)
+    except Exception:
+        pass  # Never block on telemetry failure
 
 # Bash commands that are always allowed (read-only / safe)
 SAFE_BASH_PREFIXES = (
@@ -55,7 +76,8 @@ def write_state(state_file: Path, state: dict):
         pass  # Best effort - don't block on write failure
 
 
-def smart_block(missing: str, fix_command: str, fix_description: str):
+def smart_block(missing: str, fix_command: str, fix_description: str, **event_kwargs):
+    emit_event("blocked", reason=missing, fix=fix_command, **event_kwargs)
     message = f"""BLOCKED: {missing}
 
 FIX:
@@ -113,7 +135,8 @@ def main():
         smart_block(
             missing="Session not started",
             fix_command="/kernel/session-start",
-            fix_description="This initializes the session"
+            fix_description="This initializes the session",
+            tool=tool_name
         )
 
     # Gate 2: Needs learn? (must invoke learn before continuing)
@@ -122,7 +145,8 @@ def main():
         smart_block(
             missing=f"Lesson not recorded (trigger: {reason})",
             fix_command="/kernel/learn",
-            fix_description="Record what you learned from the fix"
+            fix_description="Record what you learned from the fix",
+            tool=tool_name
         )
 
     # Gate 3: Anchored?
@@ -133,7 +157,8 @@ def main():
             smart_block(
                 missing="Protocol not anchored",
                 fix_command="/kernel/anchor",
-                fix_description="This reads protocol and updates state"
+                fix_description="This reads protocol and updates state",
+                tool=tool_name
             )
 
         # Gate 4: Action limit (Write, Edit, Bash all count)
@@ -151,8 +176,24 @@ def main():
             smart_block(
                 missing=f"{actions_limit} actions since last anchor ({actions_since} actions)",
                 fix_command="/kernel/anchor",
-                fix_description="This re-centers on protocol and resets counter"
+                fix_description="This re-centers on protocol and resets counter",
+                tool=tool_name, actions=actions_since, limit=actions_limit
             )
+
+        # Emit allowed action event
+        detail = tool_input.get('command', tool_input.get('file_path', ''))[:120]
+        emit_event(
+            "action",
+            tool=tool_name,
+            actions=actions_since,
+            limit=actions_limit,
+            anchored=True,
+            detail=detail
+        )
+    else:
+        # No domain — emit minimal action event
+        detail = tool_input.get('command', tool_input.get('file_path', ''))[:120]
+        emit_event("action", tool=tool_name, anchored=False, detail=detail)
 
     sys.exit(0)
 
