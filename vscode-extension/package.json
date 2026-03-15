@@ -1,0 +1,51 @@
+{
+  "publisher": "local",
+  "name": "platform-selenium-tests",
+  "displayName": "Platform Selenium Tests",
+  "description": "VS Code Test Explorer integration for platform-selenium pytest suite",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.59.0"
+  },
+  "categories": ["Testing"],
+  "activationEvents": [
+    "workspaceContains:tests/**/*.py"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "platformSelenium.openKernelState",
+        "title": "Open Kernel State",
+        "category": "Platform Selenium"
+      }
+    ],
+    "configuration": {
+      "title": "Platform Selenium Tests",
+      "properties": {
+        "platformSelenium.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Python executable. Defaults to venv/bin/python, then python3."
+        },
+        "platformSelenium.pytestArgs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Extra arguments passed to pytest (e.g. [\"-x\", \"--headless\"])."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.59.0",
+    "typescript": "^5.0.0",
+    "@vscode/vsce": "^2.0.0"
+  }
+}
