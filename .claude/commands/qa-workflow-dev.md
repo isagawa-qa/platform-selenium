@@ -64,11 +64,10 @@ You are starting the 5-step QA test generation workflow in **DEVELOPMENT** mode 
 ### You CAN modify (with user approval):
 - `tests/` - Test files
 - `framework/` - All framework code (pages, tasks, roles, interfaces)
-- `mcp_server/` - MCP server code, tools, gates, generators
 - `.claude/skills/` - Skill files
 - `.claude/commands/` - Command files
 - `docs/` - Documentation
-- `CLAUDE.md`, `FRAMEWORK.md` - Configuration files
+- `CLAUDE.md` - Configuration files
 
 ### CRITICAL: Approval Required for ALL Changes
 
@@ -110,7 +109,7 @@ If a quality gate fails or tool produces an error:
 **Status:** OPEN
 **Run ID:** YYYY-MM-DD-RX
 **Caught By:** Step X (workflow name)
-**Layer:** MCP Tool | Quality Gate | AI Orchestration | Skill
+**Layer:** Quality Gate | AI Orchestration | Skill
 **File:** `path/to/file.py`
 
 **Error Message:**

@@ -15,19 +15,18 @@ Execute tests following the testing skill protocol.
 ## Usage
 
 ```
-/run-test tests/banking/test_new_customer_banking.py
-/run-test tests/auth/test_login.py::test_valid_login
+/run-test tests/pm_assistant/test_pm_assistant_priorities.py
+/run-test tests/update/test_pm_priority_update.py
 /run-test tests/  # Run all tests
 ```
 
 ## Instructions
 
-**FIRST: Read protocol from `.claude/protocols/qa-protocol.md`**
+**FIRST: Read protocol from `.claude/protocols/platform_selenium-protocol.md`**
 
-The testing skill defines:
-- Visual feedback requirements
+The protocol defines:
+- Layer architecture and patterns
 - Failure handling protocol (STOP, REPORT, ANALYZE, DISCUSS)
-- Defect tracking requirements
 
 ### Step 1: Validate Test Path
 
@@ -40,18 +39,17 @@ If invalid, report error and suggest valid paths.
 
 ### Step 2: Run Test Command
 
-**Project convention (py_sel_framework_mcp):**
-
 ```bash
 pytest $ARGUMENTS -v --html=tests/_reports/report.html --self-contained-html
 ```
+
+Add `--env=pm_hub` for PM Hub tests (localhost:3000).
 
 ### Step 3: Visual Feedback
 
 During execution, show:
 - Test names as they run
 - PASSED/FAILED status per test
-- Progress indication
 
 ### Step 4: Results Summary
 
@@ -62,7 +60,7 @@ After execution, show:
 
 ### Step 5: On Failure (CRITICAL)
 
-If ANY test fails, follow the testing skill failure protocol:
+If ANY test fails, follow HITL protocol:
 
 1. **STOP** - Halt, do not auto-fix
 2. **REPORT** - Show: test name, error, location
@@ -74,18 +72,3 @@ If ANY test fails, follow the testing skill failure protocol:
 8. **RE-TEST** - Run same tests again
 
 **Never auto-fix without user approval.**
-
-## Example Output
-
-```
-Running: pytest tests/banking/test_new_customer_banking.py -v
-
-tests/banking/test_new_customer_banking.py::TestNewCustomerBanking::test_new_customer_can_register_and_open_savings PASSED
-tests/banking/test_new_customer_banking.py::TestNewCustomerBanking::test_customer_can_register_transfer_and_verify PASSED
-
-========================= 2 passed in 15.32s =========================
-
-Report: tests/_reports/report.html
-
-VERDICT: PASS
-```

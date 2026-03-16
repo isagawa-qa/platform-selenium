@@ -69,28 +69,18 @@ You are starting the 5-step QA test generation workflow with collaborative const
 - `tests/data/` - Test data files
 
 ### You CANNOT modify:
-- `mcp_server/` - MCP server code, tools, gates, generators
 - `.claude/skills/` - Skill files
 - `.claude/commands/` - Command files
 - `framework/interfaces/` - BrowserInterface
 - `framework/resources/` - Core utilities
-- `CLAUDE.md`, `FRAMEWORK.md` - Configuration files
+- `CLAUDE.md` - Configuration files
 
 ### On Failure Behavior:
 
 If a quality gate fails or tool produces an error:
 
 1. **STOP** - Do not attempt to fix framework code
-2. **REPORT** - Show the user:
-   ```
-   Workflow stopped due to an issue.
-
-   Step: [step number]
-   Error: [error message]
-
-   This appears to be a framework issue. Please contact support or report at:
-   https://github.com/[repo]/issues
-   ```
+2. **REPORT** - Show the user what failed
 3. **DO NOT** attempt to modify any files in the restricted list above
 4. **DO NOT** retry with workarounds that modify framework internals
 

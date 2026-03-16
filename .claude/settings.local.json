@@ -74,7 +74,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .claude/hooks/universal-gate-enforcer.py"
+            "command": "python /Users/briandawson/workspace/platform-selenium/.claude/hooks/universal-gate-enforcer.py"
           }
         ]
       }
@@ -85,7 +85,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .claude/hooks/test-failure-detector.py"
+            "command": "python /Users/briandawson/workspace/platform-selenium/.claude/hooks/test-failure-detector.py"
           }
         ]
       }

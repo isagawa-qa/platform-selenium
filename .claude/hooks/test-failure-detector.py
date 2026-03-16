@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 from datetime import datetime, timezone
 
-STATE_DIR = Path('.claude/state')
+STATE_DIR = Path('/Users/briandawson/workspace/platform-selenium/.claude/state')
 SESSION_STATE = STATE_DIR / 'session_state.json'
 DEBUG_LOG = STATE_DIR / 'hook_debug.log'
 EVENTS_LOG = STATE_DIR / 'events.jsonl'
@@ -109,10 +109,6 @@ def main():
     # NOTE: Claude Code sends 'tool_response' not 'tool_result'
     tool_result = data.get('tool_response', {})
 
-    debug_log(f"tool_input keys: {list(tool_input.keys()) if isinstance(tool_input, dict) else type(tool_input)}")
-    debug_log(f"tool_response keys: {list(tool_result.keys()) if isinstance(tool_result, dict) else type(tool_result)}")
-    debug_log(f"tool_response type: {type(tool_result)}")
-
     command = tool_input.get('command', '')
     debug_log(f"command: {command[:100]}...")
 
@@ -122,11 +118,8 @@ def main():
         sys.exit(0)
 
     debug_log(f"Detected test command!")
-    debug_log(f"tool_response content (first 500 chars): {str(tool_result)[:500]}")
 
     # Check exit code (non-zero = failure)
-    # PostToolUse receives the result, which includes exit code for Bash
-    # Fallback: check stdout/stderr for failure patterns if exit_code not available
     exit_code = tool_result.get('exit_code')
 
     # If exit_code not in tool_result, try to detect failure from output
@@ -135,14 +128,12 @@ def main():
         stderr = tool_result.get('stderr', '') or ''
         output = (stdout + stderr).lower()
 
-        # Common test failure patterns
         failure_patterns = [
             'failed', 'failure', 'error', 'exception',
             'assert', 'traceback', 'exit code 1', 'exit code 2',
             'tests failed', 'test failed', '1 failed', '2 failed',
         ]
 
-        # Check if any failure pattern is in output
         has_failure = any(pattern in output for pattern in failure_patterns)
         exit_code = 1 if has_failure else 0
 
@@ -151,13 +142,11 @@ def main():
     if exit_code != 0:
         debug_log(f"Test FAILED - setting needs_learn=true")
         emit_event("test_fail", command=command[:120], exit_code=exit_code)
-        # Test failed - set needs_learn
         session_state = read_state(SESSION_STATE)
         session_state['needs_learn'] = True
         session_state['needs_learn_reason'] = 'test_failure'
         write_state(SESSION_STATE, session_state)
 
-        # Inform the agent (this goes to stderr, visible to agent)
         sys.stderr.write(f"""
 TEST FAILURE DETECTED
 
