@@ -12,6 +12,263 @@ https://github.com/user-attachments/assets/b9fc88b5-5fd4-4308-b248-17fbcc47b637
 
 ---
 
+## Get Started (Step by Step)
+
+Follow each step in order. Do not skip any step. Everything is done inside VS Code.
+
+### Step 1: Install VS Code
+
+VS Code is the code editor where you will do all your work.
+
+1. Go to https://code.visualstudio.com/
+2. Click the big **Download** button
+3. Open the file you downloaded
+4. Follow the installer — click **Next** on each screen, then click **Install**
+5. When it finishes, open VS Code
+
+### Step 2: Install Git
+
+Git is a tool that downloads and tracks code. You need it to download this project.
+
+1. Go to https://git-scm.com/downloads
+2. Click the download for your operating system (Windows, Mac, or Linux)
+3. Open the file you downloaded
+4. Follow the installer — use the default options on every screen, click **Next**, then **Install**
+5. When it finishes, restart VS Code if it is already open
+
+**Check that Git is installed:**
+1. In VS Code, open the terminal: press ``Ctrl + ` `` (the backtick key, above the Tab key on your keyboard)
+2. Type this and press **Enter**:
+   ```bash
+   git --version
+   ```
+3. You should see something like: `git version 2.44.0`. If you see this, Git is installed.
+
+### Step 3: Install Python
+
+Python runs the test framework. You need version 3.10 or higher.
+
+1. Go to https://www.python.org/downloads/
+2. Click the big **Download Python** button
+3. Open the file you downloaded
+4. **Important:** Check the box that says **"Add Python to PATH"** at the bottom of the installer
+5. Click **Install Now**
+6. When it finishes, restart VS Code
+
+**Check that Python is installed:**
+1. In the VS Code terminal (``Ctrl + ` ``), type:
+   ```bash
+   python --version
+   ```
+2. You should see something like: `Python 3.12.2`. The number must be 3.10 or higher.
+
+### Step 4: Install Node.js
+
+Node.js is needed for the Playwright MCP browser tool that discovers page elements.
+
+1. Go to https://nodejs.org/
+2. Click the **LTS** download button (the one that says "Recommended")
+3. Open the file you downloaded
+4. Follow the installer — use the default options, click **Next**, then **Install**
+5. Restart VS Code after installing
+
+**Check that Node.js is installed:**
+1. In the VS Code terminal (``Ctrl + ` ``), type:
+   ```bash
+   node --version
+   ```
+2. You should see something like: `v20.11.0`. The number must be 18 or higher.
+
+### Step 5: Install Claude Code Extension
+
+Claude Code is the AI agent that builds tests for you inside VS Code.
+
+1. In VS Code, click the **Extensions** icon on the left sidebar (it looks like 4 small squares)
+2. In the search box, type: `Claude Code`
+3. Find **"Claude Code"** by Anthropic — click **Install**
+4. Wait for the install to finish
+5. You will see a **sparkle icon (✱)** appear in the top-right area of VS Code
+
+> **You need an Anthropic account.** If you do not have one, go to https://claude.ai and create an account first.
+
+### Step 6: Download This Project
+
+Do this inside VS Code. Do not use a separate terminal.
+
+1. In VS Code, open the terminal: press ``Ctrl + ` ``
+2. Go to your Desktop (so the project saves there):
+   ```bash
+   cd Desktop
+   ```
+3. Download the project:
+   ```bash
+   git clone https://github.com/isagawa-qa/platform-selenium.git
+   ```
+4. Wait for the download to finish
+
+### Step 7: Open the Project in VS Code
+
+This step is important. Claude Code needs to be inside the project folder to work correctly.
+
+1. In VS Code, click **File** → **Open Folder**
+2. Find and select the `platform-selenium` folder on your Desktop
+3. Click **Select Folder** (Windows) or **Open** (Mac)
+4. VS Code will reload with the project open
+5. You should see the project files on the left sidebar (folders like `framework/`, `tests/`, `.claude/`)
+
+### Step 8: Install Dependencies
+
+1. In VS Code, open the terminal: press ``Ctrl + ` ``
+2. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   ```
+3. Activate the virtual environment:
+   - **Windows:**
+     ```bash
+     venv\Scripts\activate
+     ```
+   - **Mac / Linux:**
+     ```bash
+     source venv/bin/activate
+     ```
+4. You should see `(venv)` at the beginning of your terminal line. This means the virtual environment is active.
+5. Install the project dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+6. Wait for it to finish
+7. Copy the environment config file:
+   ```bash
+   cp .env.example .env
+   ```
+
+### Step 9: Verify Playwright MCP
+
+The AI agent uses Playwright MCP to open a browser and discover page elements.
+
+1. Click the **sparkle icon (✱)** in VS Code to open Claude Code
+2. Type:
+   ```
+   /mcp
+   ```
+3. You should see **playwright** in the list of MCP servers
+4. If you do NOT see it, close VS Code and open it again, then check `/mcp` again
+
+### Step 10: Verify the Install
+
+In the VS Code terminal, make sure `(venv)` is showing, then type:
+```bash
+pytest --co
+```
+
+You should see a list of test files. This means pytest can find the tests and the framework is installed correctly.
+
+If you see errors, go to the [Troubleshooting](#troubleshooting) section below.
+
+### Step 11: Create Your First Test
+
+1. In Claude Code (click the **sparkle icon ✱** if it is not open), type:
+   ```
+   /qa-workflow
+   ```
+2. Claude will ask what you want to test. Use this format for best results:
+
+   ```
+   Requirement: As a [role], I want to [action] so I can [goal]
+   URL: https://your-app.com/page1, https://your-app.com/page2
+   Workflows: workflow-name
+
+   ---
+   Steps:
+
+   Phase 1: [Description]
+   1. [Action] → [Expected result]
+   2. [Action] → [Expected result]
+   3. [Action] → [Expected result]
+
+   Phase 2: [Description]
+   4. [Action] → [Expected result]
+   5. [Action] → [Expected result]
+
+   Expected:
+   - [What should happen after Phase 1]
+   - [What should happen after Phase 2]
+
+   Credentials:
+   - Email: your-test-email@example.com
+   - Password: your-test-password
+   ```
+
+   **Example (real test):**
+
+   ```
+   Requirement: As an employee manager, I want to create an employee
+     and assign them a task so I can validate the workforce management flow
+   URL: https://myapp.com/employees, https://myapp.com/tasks
+   Workflows: employee-management and task-management
+
+   ---
+   Steps:
+
+   Phase 1: Create employee
+   1. Login with credentials → redirects to /dashboard
+   2. Click "Employees" in sidebar → opens /employees
+   3. Click "Add Employee" button → modal opens
+   4. Enter name: "Research Assistant"
+   5. Configure employee settings (role, capabilities)
+   6. Click "Create Employee" → modal closes
+
+   Phase 2: Assign task to employee
+   7. Click "Tasks" in sidebar → opens /tasks
+   8. Click "Add Task" button → modal opens
+   9. Enter title: "Research competitor pricing"
+   10. Enter description: "Analyze top 5 competitors"
+   11. Select assignee: "Research Assistant" from dropdown
+   12. Click "Create Task" → modal closes
+
+   Expected:
+   - Toast: "Employee created" after step 6
+   - "Research Assistant" appears in employees list
+   - Toast: "Task created" after step 12
+   - Task shows "Research Assistant" as assignee
+
+   Credentials:
+   - Email: testuser@example.com
+   - Password: testpassword123
+   ```
+
+3. Press **Enter** and wait. Claude will:
+   - Open a browser and navigate to your URL
+   - Find all the buttons, fields, and links on each page
+   - Write the test code automatically
+   - Save the files in the correct folders
+   - Run the test
+
+4. When it finishes, you will see the test result: **passed** or **failed**
+
+### Step 12: Review the Code Quality
+
+After Claude creates the test, run a code review to fix any pattern issues:
+
+1. In Claude Code, type:
+   ```
+   /pr
+   ```
+2. Claude will scan all generated files and check them against the framework's coding standards
+3. If everything is correct, you will see: **PR REVIEW: APPROVED**
+4. If there are issues, Claude will show you what is wrong and ask how you want to fix them. Choose **Option 1 (Fix all)** to let Claude fix the issues automatically.
+
+> **Always run `/pr` after creating tests.** This ensures your test code follows the correct architecture patterns.
+
+### Step 13: Create More Tests
+
+Repeat Steps 11-12 with different requirements for your application.
+
+> **Tip:** The more detail you put in your requirement (steps, expected results, URLs), the better the generated test will be. Vague requirements produce vague tests.
+
+---
+
 ## The Problem
 
 AI can generate Selenium tests in seconds. But without enforcement:
@@ -80,8 +337,8 @@ Test (Arrange / Act / Assert)
 ### 1. Install
 
 ```bash
-git clone https://github.com/isagawa-qa/platform.git
-cd platform
+git clone https://github.com/isagawa-qa/platform-selenium.git
+cd platform-selenium
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
