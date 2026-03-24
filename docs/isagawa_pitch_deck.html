@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Isagawa QA Platform — AI Execution Management</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --navy: #060A14;
+    --navy-2: #0D1321;
+    --navy-3: #111827;
+    --blue: #1E7DFF;
+    --blue-dim: #1255B0;
+    --orange: #FF6B35;
+    --orange-dim: #C84E1A;
+    --white: #F0F4FF;
+    --grey: #8892A4;
+    --grey-dim: #3D4A5C;
+    --grid: rgba(30,125,255,0.04);
+    --border: rgba(30,125,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ─── GRID BACKGROUND ─────────────────── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── DECK ENGINE ─────────────────────── */
+  .deck { width: 100vw; height: 100vh; position: relative; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.5s cubic-bezier(.4,0,.2,1), transform 0.5s cubic-bezier(.4,0,.2,1);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+  .slide.exit {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+
+  /* ─── NAVIGATION ──────────────────────── */
+  .nav {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+  }
+  .nav-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--grey-dim);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .nav-dot.active {
+    width: 24px;
+    border-radius: 3px;
+    background: var(--blue);
+  }
+
+  .nav-arrows {
+    position: fixed;
+    bottom: 32px;
+    right: 48px;
+    display: flex;
+    gap: 12px;
+    z-index: 100;
+  }
+  .nav-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    background: rgba(13,19,33,0.8);
+    color: var(--grey);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    backdrop-filter: blur(8px);
+  }
+  .nav-btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .slide-counter {
+    position: fixed;
+    top: 40px;
+    right: 48px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--grey-dim);
+    letter-spacing: 2px;
+    z-index: 100;
+  }
+
+  /* ─── LOGO/WORDMARK ───────────────────── */
+  .wordmark {
+    position: fixed;
+    top: 38px;
+    left: 48px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--blue);
+    text-transform: uppercase;
+    z-index: 100;
+  }
+  .wordmark span { color: var(--grey-dim); }
+
+  /* ─── SHARED COMPONENTS ───────────────── */
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tag::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--blue);
+  }
+
+  h1 {
+    font-size: clamp(42px, 5.5vw, 72px);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+  }
+  h2 {
+    font-size: clamp(32px, 4vw, 54px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    margin-bottom: 20px;
+  }
+  .accent { color: var(--blue); }
+  .accent-orange { color: var(--orange); }
+
+  .subtitle {
+    font-size: clamp(16px, 1.8vw, 22px);
+    color: var(--grey);
+    font-weight: 400;
+    line-height: 1.6;
+    max-width: 700px;
+    margin-bottom: 48px;
+  }
+
+  .rule {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin: 40px 0;
+  }
+
+  /* Card */
+  .card {
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px;
+  }
+  .card-grid {
+    display: grid;
+    gap: 20px;
+  }
+  .card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .card-grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 14px;
+  }
+  .card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    margin-bottom: 10px;
+    color: var(--white);
+  }
+  .card p {
+    font-size: 13px;
+    color: var(--grey);
+    line-height: 1.65;
+  }
+  .card .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+  }
+
+  /* Table */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .compare-table th {
+    text-align: left;
+    padding: 12px 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .compare-table td {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--grey-dim);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .col-bad { color: var(--grey); }
+  .col-good { color: var(--blue); font-weight: 500; }
+  .th-bad { color: var(--grey); }
+  .th-good { color: var(--blue); }
+
+  /* Code block */
+  .code-block {
+    background: #070B14;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--grey);
+  }
+  .code-block .c-blue { color: var(--blue); }
+  .code-block .c-orange { color: var(--orange); }
+  .code-block .c-white { color: var(--white); }
+  .code-block .c-green { color: #4ADE80; }
+
+  /* Layer diagram */
+  .layer-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+  .layer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-radius: 4px;
+    border-left: 3px solid transparent;
+    background: var(--navy-2);
+    border-right: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .layer-1 { border-left-color: var(--blue); margin-left: 0; }
+  .layer-2 { border-left-color: #3A9BFF; margin-left: 28px; }
+  .layer-3 { border-left-color: #5BB0FF; margin-left: 56px; }
+  .layer-4 { border-left-color: #7CC4FF; margin-left: 84px; }
+  .layer-5 { border-left-color: #9DD4FF; margin-left: 112px; }
+  .layer-name {
+    font-weight: 700;
+    font-size: 13px;
+    min-width: 150px;
+    color: var(--white);
+  }
+  .layer-desc {
+    font-size: 12px;
+    color: var(--grey);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .layer-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .badge-blue { background: rgba(30,125,255,0.1); color: var(--blue); border: 1px solid var(--blue-dim); }
+  .badge-orange { background: rgba(255,107,53,0.1); color: var(--orange); border: 1px solid var(--orange-dim); }
+
+  /* Pricing cards */
+  .price-card {
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .price-card.featured {
+    border-color: var(--blue);
+    background: rgba(30,125,255,0.06);
+  }
+  .price-card .tier {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--grey);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .price-card .price {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--white);
+    margin-top: 4px;
+  }
+  .price-card .price-desc {
+    font-size: 12px;
+    color: var(--grey);
+    line-height: 1.5;
+  }
+
+  /* ─── SLIDE 1: TITLE ──────────────────── */
+  #slide-1 { text-align: center; }
+  #slide-1 .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+  }
+  #slide-1 .kicker::before,
+  #slide-1 .kicker::after {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 1px;
+    background: var(--blue-dim);
+  }
+  #slide-1 h1 {
+    font-size: clamp(56px, 8vw, 96px);
+    background: linear-gradient(135deg, #fff 30%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+  #slide-1 .headline-2 {
+    font-size: clamp(14px, 1.6vw, 18px);
+    color: var(--grey);
+    letter-spacing: 1px;
+    margin-bottom: 48px;
+  }
+  #slide-1 .hero-statement {
+    max-width: 680px;
+    font-size: clamp(20px, 2.4vw, 28px);
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.4;
+    border-left: 2px solid var(--blue);
+    padding-left: 24px;
+    text-align: left;
+    margin: 0 auto;
+  }
+  #slide-1 .hero-statement em {
+    color: var(--orange);
+    font-style: normal;
+  }
+
+  /* ─── SLIDE 2: PROBLEM ────────────────── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    width: 100%;
+    align-items: center;
+  }
+
+  .problem-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .problem-list li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    font-size: 15px;
+    color: var(--grey);
+    line-height: 1.5;
+  }
+  .problem-list li::before {
+    content: '✗';
+    color: var(--orange);
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ─── SLIDE 5: LOOP ───────────────────── */
+  .loop-diagram {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--navy-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 32px 40px;
+    line-height: 2.2;
+    color: var(--grey);
+    width: 100%;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="wordmark">ISAGAWA <span>// QA</span></div>
+<div class="slide-counter" id="counter">01 / 08</div>
+
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1: TITLE -->
+  <section class="slide active" id="slide-1">
+    <div class="kicker">AI Execution Management</div>
+    <h1>ISAGAWA</h1>
+    <div class="headline-2">AI EXECUTION MANAGEMENT FOR TEST AUTOMATION</div>
+    <div class="hero-statement">
+      AI can generate tests in seconds.<br>
+      But can you trust it to <em>execute</em> correctly?
+    </div>
+  </section>
+
+  <!-- SLIDE 2: THE PROBLEM -->
+  <section class="slide" id="slide-2">
+    <div class="two-col">
+      <div>
+        <div class="tag">The Problem</div>
+        <h2>AI-generated tests <span class="accent-orange">break</span> your architecture.</h2>
+        <p class="subtitle" style="max-width:480px">The cycle is predictable: Generate → breaks something → fix → generates it wrong again. You spend more time fixing AI output than writing tests yourself.</p>
+      </div>
+      <div>
+        <ul class="problem-list">
+          <li>Tests break existing architecture patterns with every generation</li>
+          <li>Page Objects get skipped — locators end up in Tasks or Roles</li>
+          <li>Business logic mixes with UI interaction in the same function</li>
+          <li>The same mistakes repeat across every AI session</li>
+          <li>No enforcement means every new developer reintroduces the same bugs</li>
+          <li>CI pipelines fail hours after the AI said it was done</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: THE SOLUTION -->
+  <section class="slide" id="slide-3">
+    <div class="tag">The Solution</div>
+    <h2 style="text-align:center">The <span class="accent">Isagawa Kernel</span><br>manages AI from within.</h2>
+    <p class="subtitle" style="text-align:center">It doesn't monitor the AI from outside. It runs <em>inside</em> the agent — enforcing every action at the moment of execution, permanently learning after every failure.</p>
+    <div class="card-grid card-grid-3" style="width:100%;max-width:960px">
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>Real-Time Enforcement</h3>
+        <p>Hooks block writes the instant a layer violation is detected. The AI cannot proceed until the architecture is correct.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🧠</div>
+        <h3>Permanent Learning</h3>
+        <p>Every failure triggers a mandatory learn cycle. Lessons are recorded as hard rules. The same mistake cannot recur.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔒</div>
+        <h3>Human-in-the-Loop</h3>
+        <p>On failure, the AI stops, reports, and waits. It never autonomously loops through fix attempts. You decide. It executes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: 5-LAYER ARCHITECTURE -->
+  <section class="slide" id="slide-4">
+    <div style="width:100%;max-width:1000px">
+      <div class="tag">Architecture</div>
+      <h2>5 Layers. One job each. <span class="accent">No mixing.</span></h2>
+      <div class="layer-stack" style="margin-top:8px">
+        <div class="layer layer-1">
+          <div class="layer-name">Test</div>
+          <div class="layer-desc">Arrange / Act / Assert — orchestrates Roles, asserts via POM state-check methods</div>
+          <div class="layer-badge badge-orange">@autologger("Test")</div>
+        </div>
+        <div class="layer layer-2">
+          <div class="layer-name">Role</div>
+          <div class="layer-desc">User persona — coordinates Tasks into complete business workflows</div>
+          <div class="layer-badge badge-orange">@autologger("Role")</div>
+        </div>
+        <div class="layer layer-3">
+          <div class="layer-name">Task</div>
+          <div class="layer-desc">One domain operation — composes Page Object calls into fluent chains</div>
+          <div class="layer-badge badge-orange">@autologger("Task")</div>
+        </div>
+        <div class="layer layer-4">
+          <div class="layer-name">Page Object (POM)</div>
+          <div class="layer-desc">One page — locators live HERE only, atomic methods, return self</div>
+          <div class="layer-badge badge-blue">Locators only here</div>
+        </div>
+        <div class="layer layer-5">
+          <div class="layer-name">BrowserInterface</div>
+          <div class="layer-desc">Selenium wrapper — explicit waits, retry, logging. No raw Selenium above this layer.</div>
+          <div class="layer-badge badge-blue">Foundation</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: HOW IT WORKS -->
+  <section class="slide" id="slide-5">
+    <div class="two-col">
+      <div>
+        <div class="tag">How It Works</div>
+        <h2>Describe. Discover. <span class="accent">Deploy.</span></h2>
+        <p class="subtitle">The agent inspects your live application, generates all 5 layers with perfect architecture, then runs the tests with you in control of every decision.</p>
+        <div class="card-grid" style="gap:12px">
+          <div class="card" style="padding:16px 20px">
+            <div class="mono">Step 1 — Describe</div>
+            <p style="margin-top:6px">"As a customer, I want to submit an inquiry on https://app.com"</p>
+          </div>
+          <div class="card" style="padding:16px 20px">
+            <div class="mono">Step 2 — Discover</div>
+            <p style="margin-top:6px">AI inspects live page elements via Playwright MCP. You review the discovery report.</p>
+          </div>
+          <div class="card" style="padding:16px 20px">
+            <div class="mono">Step 3 — Generate</div>
+            <p style="margin-top:6px">All 5 layers are written with architecture enforced. Every file is reviewed before running.</p>
+          </div>
+        </div>
+      </div>
+      <div class="loop-diagram">
+        <span style="color:var(--blue)">session-start</span> → <span style="color:var(--white)">anchor</span> → <span style="color:var(--green)">WORK</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--grey-dim)">every 10 actions</span>&nbsp;&nbsp;&nbsp;↓<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--orange)">failure?</span> → <span style="color:var(--white)">fix</span> → <span style="color:var(--blue)">learn</span> [MANDATORY]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--green)">kernel/complete</span> ← lesson recorded
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: GOVERNANCE VS EXECUTION -->
+  <section class="slide" id="slide-6">
+    <div style="width:100%;max-width:900px">
+      <div class="tag">Differentiation</div>
+      <h2><span class="accent">Execution Management</span><br>vs AI Governance</h2>
+      <div class="card" style="padding:0;overflow:hidden;margin-top:24px">
+        <table class="compare-table">
+          <thead>
+            <tr style="background:var(--navy-3)">
+              <th class="th-bad" style="width:40%">AI Governance (Others)</th>
+              <th class="th-good">AI Execution Management (Isagawa)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="col-bad">Monitors AI behavior after the fact</td><td class="col-good">Controls AI behavior in real time</td></tr>
+            <tr><td class="col-bad">Documents compliance policies</td><td class="col-good">Enforces compliance automatically</td></tr>
+            <tr><td class="col-bad">Alerts on violations after they occur</td><td class="col-good">Prevents violations before they write to disk</td></tr>
+            <tr><td class="col-bad">Audits outputs at end of session</td><td class="col-good">Gates every action during execution</td></tr>
+            <tr><td class="col-bad">"Did the AI do it right?"</td><td class="col-good">"The AI can only do it right."</td></tr>
+            <tr><td class="col-bad">Same mistakes repeat indefinitely</td><td class="col-good">Permanent learning after every failure</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: PRICING -->
+  <section class="slide" id="slide-7">
+    <div style="width:100%;max-width:1000px">
+      <div class="tag">Services</div>
+      <h2>AI can't be trusted to run QA.<br>Until you enforce <span class="accent">how it executes.</span></h2>
+      <div class="card-grid card-grid-2" style="margin-top:32px">
+        <div class="price-card">
+          <div class="tier">Demo</div>
+          <div class="price">60 Minutes</div>
+          <div class="price-desc">Live session on your site. We build working tests on your staging environment in real time. No proposal. No discovery phase. No waiting.</div>
+        </div>
+        <div class="price-card featured">
+          <div class="tier">Implementation</div>
+          <div class="price">$15,000 – $50,000</div>
+          <div class="price-desc">Full QA infrastructure: framework setup, page object architecture, credential management, environment config, team training. Your team owns the entire stack.</div>
+        </div>
+        <div class="price-card">
+          <div class="tier">Retainer</div>
+          <div class="price">$1,000 – $3,000/mo</div>
+          <div class="price-desc">Ongoing test development, maintenance, new workflow coverage, priority support. Scales with your sprint velocity.</div>
+        </div>
+        <div class="price-card">
+          <div class="tier">Enterprise</div>
+          <div class="price">Custom ($50K+)</div>
+          <div class="price-desc">Full implementation, compliance documentation, dedicated support, CI/CD integration, multi-team rollout.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: CTA -->
+  <section class="slide" id="slide-8">
+    <div style="text-align:center;max-width:700px">
+      <div class="tag" style="justify-content:center">Ready</div>
+      <h1 style="background:linear-gradient(135deg, #fff 20%, var(--blue) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+        This is AI you can<br>delegate to.
+      </h1>
+      <p class="subtitle" style="max-width:560px;margin:0 auto 48px">
+        The Isagawa QA Platform is the first system that doesn't just generate tests — it manages the AI that runs them. Let us prove it on your codebase.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:18px;color:var(--blue);letter-spacing:1px">alain@isagawa.co</div>
+        <div style="font-size:13px;color:var(--grey)">Or book via LinkedIn: Alain Ignacio</div>
+      </div>
+      <div class="rule"></div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--grey-dim);letter-spacing:3px">
+        ISAGAWA — SELF-BUILDING. SELF-IMPROVING. SAFETY-FIRST.
+      </div>
+    </div>
+  </section>
+
+</div><!-- /deck -->
+
+<!-- NAV -->
+<div class="nav" id="nav"></div>
+<div class="nav-arrows">
+  <button class="nav-btn" id="prev">←</button>
+  <button class="nav-btn" id="next">→</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const nav = document.getElementById('nav');
+  const counter = document.getElementById('counter');
+  let current = 0;
+
+  // Build dots
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goTo(i));
+    nav.appendChild(dot);
+  });
+
+  function goTo(n) {
+    slides[current].classList.add('exit');
+    slides[current].classList.remove('active');
+    setTimeout(() => slides[current - (current > n ? 0 : 0)].classList.remove('exit'), 500);
+
+    current = Math.max(0, Math.min(n, slides.length - 1));
+    slides.forEach(s => s.classList.remove('active', 'exit'));
+    slides[current].classList.add('active');
+
+    document.querySelectorAll('.nav-dot').forEach((d, i) =>
+      d.classList.toggle('active', i === current)
+    );
+    counter.textContent = String(current + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+  }
+
+  document.getElementById('next').addEventListener('click', () => goTo(current + 1));
+  document.getElementById('prev').addEventListener('click', () => goTo(current - 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(current - 1);
+  });
+</script>
+</body>
+</html>

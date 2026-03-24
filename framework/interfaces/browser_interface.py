@@ -362,10 +362,13 @@ class BrowserInterface:
         """
         timeout = timeout if timeout is not None else 5
         try:
-            wait = WebDriverWait(self.driver, timeout)
+            wait = WebDriverWait(
+                self.driver, timeout,
+                ignored_exceptions=(StaleElementReferenceException, AttributeError)
+            )
             element = wait.until(EC.visibility_of_element_located((by, value)))
             return element.is_displayed()
-        except (TimeoutException, NoSuchElementException):
+        except (TimeoutException, NoSuchElementException, AttributeError):
             return False
 
     def hover(self, by: By, value: str, timeout: Optional[int] = None) -> None:
@@ -428,7 +431,10 @@ class BrowserInterface:
         timeout = timeout if timeout is not None else self.explicit_wait
 
         try:
-            wait = WebDriverWait(self.driver, timeout)
+            wait = WebDriverWait(
+                self.driver, timeout,
+                ignored_exceptions=(StaleElementReferenceException, AttributeError)
+            )
             element = wait.until(EC.visibility_of_element_located((by, value)))
             self.logger.debug(f"Element visible: {by}='{value}'")
             return element

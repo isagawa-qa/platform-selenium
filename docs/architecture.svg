@@ -1,0 +1,403 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 980" width="1500" height="980" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+
+  <!-- Background -->
+  <rect width="1500" height="980" fill="#0f1117"/>
+
+  <!-- Title -->
+  <text x="750" y="38" text-anchor="middle" font-size="20" font-weight="700" fill="#e2e8f0" letter-spacing="1">
+    Platform Selenium — Architecture &amp; Kernel
+  </text>
+  <text x="750" y="57" text-anchor="middle" font-size="11" fill="#64748b">
+    Isagawa QA Platform · Python/Selenium 4-layer POM · Self-improving Kernel
+  </text>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       COLUMN 1 — KERNEL LOOP (left)
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <rect x="20" y="70" width="450" height="870" rx="10" fill="#1e2433" stroke="#334155" stroke-width="1.5"/>
+  <text x="245" y="94" text-anchor="middle" font-size="13" font-weight="700" fill="#818cf8" letter-spacing="1.5">KERNEL LOOP</text>
+
+  <!-- session-start box -->
+  <rect x="95" y="108" width="300" height="44" rx="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="245" y="125" text-anchor="middle" font-size="11" font-weight="600" fill="#93c5fd">/kernel/session-start</text>
+  <text x="245" y="141" text-anchor="middle" font-size="10" fill="#64748b">Check state · domain persistence rule</text>
+
+  <!-- arrow down -->
+  <line x1="245" y1="152" x2="245" y2="168" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- anchor box -->
+  <rect x="95" y="168" width="300" height="44" rx="6" fill="#1a3a2e" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="245" y="185" text-anchor="middle" font-size="11" font-weight="600" fill="#86efac">/kernel/anchor</text>
+  <text x="245" y="201" text-anchor="middle" font-size="10" fill="#64748b">Re-read protocol · review inter-anchor work</text>
+
+  <!-- arrow down -->
+  <line x1="245" y1="212" x2="245" y2="228" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- WORK box -->
+  <rect x="75" y="228" width="340" height="100" rx="6" fill="#1c1f2e" stroke="#6366f1" stroke-width="2"/>
+  <text x="245" y="248" text-anchor="middle" font-size="12" font-weight="700" fill="#a5b4fc">WORK</text>
+  <text x="245" y="265" text-anchor="middle" font-size="10" fill="#94a3b8">Write / Edit / Bash</text>
+  <text x="245" y="280" text-anchor="middle" font-size="10" fill="#94a3b8">Hook auto-increments counter</text>
+  <text x="245" y="295" text-anchor="middle" font-size="10" fill="#94a3b8">Every 10 actions → hook blocks → anchor</text>
+  <text x="245" y="310" text-anchor="middle" font-size="10" fill="#94a3b8">Run tests after each change</text>
+
+  <!-- arrow down to complete -->
+  <line x1="245" y1="328" x2="245" y2="344" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- complete box -->
+  <rect x="95" y="344" width="300" height="44" rx="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="245" y="361" text-anchor="middle" font-size="11" font-weight="600" fill="#93c5fd">/kernel/complete</text>
+  <text x="245" y="377" text-anchor="middle" font-size="10" fill="#64748b">Final gate · cycling continuation</text>
+
+  <!-- Loop-back arrow (right side): complete → anchor -->
+  <path d="M 395 366 Q 440 280 395 210" stroke="#334155" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowGray)"/>
+  <text x="444" y="295" font-size="9" fill="#475569">every</text>
+  <text x="444" y="306" font-size="9" fill="#475569">10 acts</text>
+
+  <!-- ── Failure path ── -->
+  <text x="245" y="418" text-anchor="middle" font-size="11" font-weight="600" fill="#f87171">Failure Path</text>
+
+  <!-- failure → fix -->
+  <rect x="95" y="428" width="140" height="36" rx="5" fill="#3b1f1f" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="165" y="443" text-anchor="middle" font-size="10" font-weight="600" fill="#fca5a5">/kernel/fix</text>
+  <text x="165" y="456" text-anchor="middle" font-size="9" fill="#64748b">Impact assessment</text>
+
+  <!-- arrow fix → learn -->
+  <line x1="235" y1="446" x2="255" y2="446" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrowRed)"/>
+
+  <!-- learn box -->
+  <rect x="255" y="428" width="140" height="36" rx="5" fill="#3b1f1f" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="325" y="443" text-anchor="middle" font-size="10" font-weight="600" fill="#fca5a5">/kernel/learn</text>
+  <text x="325" y="456" text-anchor="middle" font-size="9" fill="#64748b">Record lesson · clear block</text>
+
+  <!-- ── Enforcement ── -->
+  <text x="245" y="494" text-anchor="middle" font-size="11" font-weight="600" fill="#fbbf24">Enforcement Hooks</text>
+
+  <!-- PreToolUse -->
+  <rect x="40" y="504" width="185" height="64" rx="5" fill="#2a2010" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="133" y="520" text-anchor="middle" font-size="10" font-weight="600" fill="#fcd34d">PreToolUse Hook</text>
+  <text x="133" y="534" text-anchor="middle" font-size="9" fill="#94a3b8">universal-gate-enforcer.py</text>
+  <text x="133" y="547" text-anchor="middle" font-size="9" fill="#64748b">Gates: session_started,</text>
+  <text x="133" y="559" text-anchor="middle" font-size="9" fill="#64748b">needs_learn=false, anchored</text>
+
+  <!-- PostToolUse -->
+  <rect x="235" y="504" width="185" height="64" rx="5" fill="#2a2010" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="328" y="520" text-anchor="middle" font-size="10" font-weight="600" fill="#fcd34d">PostToolUse Hook</text>
+  <text x="328" y="534" text-anchor="middle" font-size="9" fill="#94a3b8">test-failure-detector.py</text>
+  <text x="328" y="547" text-anchor="middle" font-size="9" fill="#64748b">Sets needs_learn=true</text>
+  <text x="328" y="559" text-anchor="middle" font-size="9" fill="#64748b">on non-zero pytest exit</text>
+
+  <!-- ── State Files ── -->
+  <text x="245" y="592" text-anchor="middle" font-size="11" font-weight="600" fill="#94a3b8">State Files</text>
+
+  <rect x="40" y="601" width="185" height="52" rx="5" fill="#1a1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="133" y="617" text-anchor="middle" font-size="9" font-weight="600" fill="#818cf8">session_state.json</text>
+  <text x="133" y="630" text-anchor="middle" font-size="8.5" fill="#64748b">session_started, needs_learn,</text>
+  <text x="133" y="642" text-anchor="middle" font-size="8.5" fill="#64748b">actions_log, context</text>
+
+  <rect x="235" y="601" width="185" height="52" rx="5" fill="#1a1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="328" y="617" text-anchor="middle" font-size="9" font-weight="600" fill="#818cf8">platform_selenium_workflow.json</text>
+  <text x="328" y="630" text-anchor="middle" font-size="8.5" fill="#64748b">anchored, actions_since_anchor,</text>
+  <text x="328" y="642" text-anchor="middle" font-size="8.5" fill="#64748b">lesson_recorded, lessons_count</text>
+
+  <!-- ── Lessons feedback loop ── -->
+  <text x="245" y="678" text-anchor="middle" font-size="11" font-weight="600" fill="#fb923c">Lessons Feedback Loop</text>
+
+  <rect x="40" y="687" width="380" height="80" rx="5" fill="#1f1a10" stroke="#f97316" stroke-width="1.5"/>
+  <text x="230" y="703" text-anchor="middle" font-size="9.5" fill="#fdba74">.claude/lessons/lessons.md — 8 lessons recorded</text>
+  <text x="120" y="720" text-anchor="middle" font-size="9" fill="#64748b">L001: use browser.type() not enter_text()</text>
+  <text x="120" y="733" text-anchor="middle" font-size="9" fill="#64748b">L002: inline-style XPath for JS apps</text>
+  <text x="120" y="746" text-anchor="middle" font-size="9" fill="#64748b">L003: no cd subdir in Bash hooks</text>
+  <text x="120" y="759" text-anchor="middle" font-size="9" fill="#64748b">L004: no implicitly_wait + WebDriverWait</text>
+  <text x="310" y="720" text-anchor="middle" font-size="9" fill="#64748b">L005: relative imports inside framework/</text>
+  <text x="310" y="733" text-anchor="middle" font-size="9" fill="#64748b">L006: playwright snapshot ≠ option text</text>
+  <text x="310" y="746" text-anchor="middle" font-size="9" fill="#64748b">L007: f-string XPath breaks on apostrophe</text>
+  <text x="310" y="759" text-anchor="middle" font-size="9" fill="#64748b">L008: New button triggers auto-thinking</text>
+
+  <!-- ── Protocol Index ── -->
+  <rect x="40" y="783" width="380" height="44" rx="5" fill="#1a1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="230" y="799" text-anchor="middle" font-size="9.5" font-weight="600" fill="#818cf8">.claude/protocols/platform_selenium-protocol.md</text>
+  <text x="230" y="813" text-anchor="middle" font-size="9" fill="#64748b">Architecture · Naming · Anti-patterns · Entry Points</text>
+
+  <!-- ── CLAUDE.md ── -->
+  <rect x="40" y="843" width="185" height="36" rx="5" fill="#1a1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="133" y="858" text-anchor="middle" font-size="9" font-weight="600" fill="#94a3b8">CLAUDE.md</text>
+  <text x="133" y="871" text-anchor="middle" font-size="8.5" fill="#64748b">Kernel rules · Loop definition</text>
+
+  <rect x="235" y="843" width="185" height="36" rx="5" fill="#1a1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="328" y="858" text-anchor="middle" font-size="9" font-weight="600" fill="#94a3b8">.claude/commands/kernel/</text>
+  <text x="328" y="871" text-anchor="middle" font-size="8.5" fill="#64748b">session-start, anchor, learn, fix…</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       COLUMN 2 — FRAMEWORK STACK (center)
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <rect x="490" y="70" width="510" height="870" rx="10" fill="#1e2433" stroke="#334155" stroke-width="1.5"/>
+  <text x="745" y="94" text-anchor="middle" font-size="13" font-weight="700" fill="#818cf8" letter-spacing="1.5">FRAMEWORK STACK</text>
+
+  <!-- Tests layer -->
+  <rect x="510" y="108" width="470" height="110" rx="6" fill="#1a2e1a" stroke="#4ade80" stroke-width="2"/>
+  <text x="745" y="127" text-anchor="middle" font-size="12" font-weight="700" fill="#86efac">TESTS  ·  tests/</text>
+  <text x="745" y="143" text-anchor="middle" font-size="10" fill="#94a3b8">@autologger("Test") · @pytest.mark.&lt;marker&gt; · AAA pattern</text>
+  <text x="745" y="157" text-anchor="middle" font-size="10" fill="#64748b">Fixtures: browser, config, test_users (session-scoped)</text>
+  <line x1="570" y1="168" x2="920" y2="168" stroke="#2d4a2d" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="610" y="182" font-size="9" fill="#64748b">navigation/</text>
+  <text x="690" y="182" font-size="9" fill="#64748b">jira/</text>
+  <text x="745" y="182" font-size="9" fill="#64748b">pm_assistant/</text>
+  <text x="845" y="182" font-size="9" fill="#64748b">update/</text>
+  <text x="610" y="195" font-size="9" fill="#4ade80">smoke (5)</text>
+  <text x="690" y="195" font-size="9" fill="#4ade80">issues (3)</text>
+  <text x="745" y="195" font-size="9" fill="#4ade80">quick-actions (3)</text>
+  <text x="845" y="195" font-size="9" fill="#4ade80">update (2?)</text>
+  <text x="745" y="210" text-anchor="middle" font-size="9" fill="#64748b">11 tests passing · conftest.py auto-registers markers</text>
+
+  <!-- arrow down -->
+  <line x1="745" y1="218" x2="745" y2="234" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <text x="755" y="230" font-size="9" fill="#475569">imports</text>
+
+  <!-- Roles layer -->
+  <rect x="510" y="234" width="470" height="86" rx="6" fill="#1a2535" stroke="#38bdf8" stroke-width="2"/>
+  <text x="745" y="253" text-anchor="middle" font-size="12" font-weight="700" fill="#7dd3fc">ROLES  ·  framework/roles/</text>
+  <text x="745" y="269" text-anchor="middle" font-size="10" fill="#94a3b8">@autologger("Role") · @autologger("Role Constructor")</text>
+  <text x="745" y="283" text-anchor="middle" font-size="10" fill="#64748b">Orchestrates MULTIPLE tasks · returns None · no Page imports</text>
+  <line x1="570" y1="292" x2="920" y2="292" stroke="#1e3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="610" y="308" font-size="9" fill="#64748b">common/</text>
+  <text x="745" y="308" font-size="9" fill="#64748b">pm_assistant/ (legacy)</text>
+  <text x="610" y="313" font-size="9" fill="#38bdf8">product_manager_role.py</text>
+
+  <!-- arrow down -->
+  <line x1="745" y1="320" x2="745" y2="336" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <text x="755" y="332" font-size="9" fill="#475569">composes</text>
+
+  <!-- Tasks layer -->
+  <rect x="510" y="336" width="470" height="100" rx="6" fill="#251a35" stroke="#a78bfa" stroke-width="2"/>
+  <text x="745" y="355" text-anchor="middle" font-size="12" font-weight="700" fill="#c4b5fd">TASKS  ·  framework/tasks/</text>
+  <text x="745" y="371" text-anchor="middle" font-size="10" fill="#94a3b8">@autologger("Task") · one domain operation per method · returns None</text>
+  <text x="745" y="385" text-anchor="middle" font-size="10" fill="#64748b">Compose Pages only · NO Role imports · NO locators</text>
+  <line x1="570" y1="394" x2="920" y2="394" stroke="#3a2a50" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="580" y="410" font-size="9" fill="#64748b">navigation/</text>
+  <text x="660" y="410" font-size="9" fill="#64748b">jira/</text>
+  <text x="720" y="410" font-size="9" fill="#64748b">pm_assistant/</text>
+  <text x="820" y="410" font-size="9" fill="#64748b">update/</text>
+  <text x="580" y="424" font-size="9" fill="#a78bfa">navigation_tasks.py</text>
+  <text x="660" y="424" font-size="9" fill="#a78bfa">jira_tasks.py</text>
+  <text x="720" y="424" font-size="9" fill="#a78bfa">pm_assistant_tasks.py</text>
+
+  <!-- arrow down -->
+  <line x1="745" y1="436" x2="745" y2="452" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <text x="755" y="448" font-size="9" fill="#475569">composes</text>
+
+  <!-- Pages layer -->
+  <rect x="510" y="452" width="470" height="110" rx="6" fill="#251e10" stroke="#fb923c" stroke-width="2"/>
+  <text x="745" y="471" text-anchor="middle" font-size="12" font-weight="700" fill="#fdba74">PAGES (POMs)  ·  framework/pages/</text>
+  <text x="745" y="487" text-anchor="middle" font-size="10" fill="#94a3b8">No @autologger · locators as class constants · atomic methods return self</text>
+  <text x="745" y="501" text-anchor="middle" font-size="10" fill="#64748b">state-check: is_*() has_*() get_*() · compose BrowserInterface (no inherit)</text>
+  <line x1="570" y1="510" x2="920" y2="510" stroke="#3a2a10" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="580" y="526" font-size="9" fill="#64748b">navigation/</text>
+  <text x="660" y="526" font-size="9" fill="#64748b">jira/</text>
+  <text x="720" y="526" font-size="9" fill="#64748b">pm_assistant/</text>
+  <text x="820" y="526" font-size="9" fill="#64748b">update/</text>
+  <text x="580" y="540" font-size="9" fill="#fb923c">nav_page.py</text>
+  <text x="660" y="540" font-size="9" fill="#fb923c">jira_page.py</text>
+  <text x="720" y="540" font-size="9" fill="#fb923c">assistant_page.py</text>
+  <text x="820" y="540" font-size="9" fill="#fb923c">update_page.py</text>
+  <text x="745" y="555" text-anchor="middle" font-size="9" fill="#64748b">Locator strategy: inline-style XPath for JS apps · data-testid preferred</text>
+
+  <!-- arrow down -->
+  <line x1="745" y1="562" x2="745" y2="578" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <text x="755" y="574" font-size="9" fill="#475569">wraps</text>
+
+  <!-- BrowserInterface layer -->
+  <rect x="510" y="578" width="470" height="90" rx="6" fill="#1a1f35" stroke="#e879f9" stroke-width="2"/>
+  <text x="745" y="597" text-anchor="middle" font-size="12" font-weight="700" fill="#f0abfc">BROWSERINTERFACE  ·  framework/interfaces/</text>
+  <text x="745" y="613" text-anchor="middle" font-size="10" fill="#94a3b8">Selenium WebDriver wrapper · DO NOT MODIFY</text>
+  <text x="745" y="627" text-anchor="middle" font-size="10" fill="#64748b">type() · click() · wait_for_element_visible() · is_element_displayed()</text>
+  <text x="745" y="641" text-anchor="middle" font-size="10" fill="#64748b">Explicit waits only · StaleElement + AttributeError in ignored_exceptions</text>
+  <text x="745" y="655" text-anchor="middle" font-size="9.5" fill="#64748b">NO implicitly_wait · composition only (no inheritance)</text>
+
+  <!-- arrow down -->
+  <line x1="745" y1="668" x2="745" y2="684" stroke="#475569" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- ChromeDriver layer -->
+  <rect x="510" y="684" width="470" height="52" rx="6" fill="#1a1520" stroke="#c084fc" stroke-width="1.5"/>
+  <text x="745" y="703" text-anchor="middle" font-size="11" font-weight="600" fill="#d8b4fe">ChromeDriver / BraveDriver</text>
+  <text x="745" y="718" text-anchor="middle" font-size="9.5" fill="#64748b">framework/resources/chromedriver/driver.py · create_driver(headless, browser)</text>
+
+  <!-- ── Anti-patterns ── -->
+  <rect x="510" y="752" width="470" height="130" rx="6" fill="#1f1010" stroke="#7f1d1d" stroke-width="1.5"/>
+  <text x="745" y="771" text-anchor="middle" font-size="11" font-weight="600" fill="#f87171">Anti-Patterns — Never Do This</text>
+  <text x="530" y="789" font-size="9.5" fill="#ef4444">✗</text><text x="543" y="789" font-size="9" fill="#94a3b8">time.sleep() — use BrowserInterface wait methods</text>
+  <text x="530" y="803" font-size="9.5" fill="#ef4444">✗</text><text x="543" y="803" font-size="9" fill="#94a3b8">implicitly_wait + WebDriverWait — unpredictable (L004)</text>
+  <text x="530" y="817" font-size="9.5" fill="#ef4444">✗</text><text x="543" y="817" font-size="9" fill="#94a3b8">Locators in Task layer — Task calls POM methods only</text>
+  <text x="530" y="831" font-size="9.5" fill="#ef4444">✗</text><text x="543" y="831" font-size="9" fill="#94a3b8">Page imports in Role layer — Roles compose Tasks only</text>
+  <text x="530" y="845" font-size="9.5" fill="#ef4444">✗</text><text x="543" y="845" font-size="9" fill="#94a3b8">from framework.X import Y inside framework/ (L005)</text>
+  <text x="530" y="859" font-size="9.5" fill="#ef4444">✗</text><text x="543" y="859" font-size="9" fill="#94a3b8">cd subdir &amp;&amp; command in Bash hooks (L003)</text>
+  <text x="530" y="873" font-size="9.5" fill="#ef4444">✗</text><text x="543" y="873" font-size="9" fill="#94a3b8">Class-based selectors on JS apps — inline-style XPath (L002)</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       COLUMN 3 — SKILLS & INFRASTRUCTURE (right)
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <rect x="1020" y="70" width="460" height="870" rx="10" fill="#1e2433" stroke="#334155" stroke-width="1.5"/>
+  <text x="1250" y="94" text-anchor="middle" font-size="13" font-weight="700" fill="#818cf8" letter-spacing="1.5">SKILLS &amp; INFRASTRUCTURE</text>
+
+  <!-- QA Workflow Skill -->
+  <rect x="1038" y="108" width="424" height="160" rx="6" fill="#1a2535" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="1250" y="126" text-anchor="middle" font-size="11" font-weight="600" fill="#7dd3fc">/qa-workflow  ·  5-Step Test Generation</text>
+  <line x1="1050" y1="134" x2="1450" y2="134" stroke="#1e3a4a" stroke-width="1"/>
+  <text x="1050" y="149" font-size="9.5" fill="#64748b">Step 1</text>
+  <text x="1095" y="149" font-size="9" fill="#94a3b8">User Input + duplicate check</text>
+  <text x="1050" y="163" font-size="9.5" fill="#64748b">Step 2</text>
+  <text x="1095" y="163" font-size="9" fill="#94a3b8">Pre-flight Configuration</text>
+  <text x="1050" y="177" font-size="9.5" fill="#64748b">Step 3</text>
+  <text x="1095" y="177" font-size="9" fill="#94a3b8">AI Processing (Playwright DOM inspection)</text>
+  <text x="1050" y="191" font-size="9.5" fill="#64748b">Step 4</text>
+  <text x="1095" y="191" font-size="9" fill="#94a3b8">Discovery + Construction (pre-construction checkpoint)</text>
+  <text x="1050" y="205" font-size="9.5" fill="#64748b">Step 5</text>
+  <text x="1095" y="205" font-size="9" fill="#94a3b8">Test Execution (/run-test)</text>
+  <line x1="1050" y1="213" x2="1450" y2="213" stroke="#1e3a4a" stroke-width="1"/>
+  <text x="1050" y="228" font-size="9" fill="#64748b">Production mode: tests/, pages/, tasks/, roles/ only</text>
+  <text x="1050" y="241" font-size="9" fill="#64748b">Restricted: framework/interfaces/, resources/, .claude/skills/</text>
+  <text x="1050" y="256" font-size="9" fill="#64748b">On failure: /qa-on-failure → /qa-propose-fix → /kernel/learn</text>
+
+  <!-- Other Skills -->
+  <rect x="1038" y="278" width="200" height="100" rx="5" fill="#1a1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="1138" y="295" text-anchor="middle" font-size="10" font-weight="600" fill="#818cf8">Other Skills</text>
+  <text x="1048" y="311" font-size="9" fill="#94a3b8">/run-test</text>
+  <text x="1150" y="311" font-size="9" fill="#64748b">Run pytest + HITL failure</text>
+  <text x="1048" y="325" font-size="9" fill="#94a3b8">/pr</text>
+  <text x="1150" y="325" font-size="9" fill="#64748b">Code review vs framework</text>
+  <text x="1048" y="339" font-size="9" fill="#94a3b8">/qa-reuse-check</text>
+  <text x="1150" y="339" font-size="9" fill="#64748b">Scan duplicate modules</text>
+  <text x="1048" y="353" font-size="9" fill="#94a3b8">/kernel/autonomous-cycle</text>
+  <text x="1150" y="353" font-size="9" fill="#64748b">Loop through task list</text>
+  <text x="1048" y="367" font-size="9" fill="#94a3b8">/qa-workflow-dev</text>
+  <text x="1150" y="367" font-size="9" fill="#64748b">Dev mode (full access)</text>
+
+  <!-- Reference files -->
+  <rect x="1248" y="278" width="214" height="100" rx="5" fill="#1a1a2e" stroke="#334155" stroke-width="1"/>
+  <text x="1355" y="295" text-anchor="middle" font-size="10" font-weight="600" fill="#818cf8">Reference Code</text>
+  <text x="1258" y="311" font-size="9" fill="#94a3b8">_reference/pages/</text>
+  <text x="1258" y="325" font-size="9" fill="#64748b">login_page.py</text>
+  <text x="1258" y="339" font-size="9" fill="#94a3b8">_reference/tasks/</text>
+  <text x="1258" y="353" font-size="9" fill="#64748b">employee_management_tasks.py</text>
+  <text x="1258" y="367" font-size="9" fill="#94a3b8">_reference/roles/</text>
+  <text x="1258" y="381" font-size="9" fill="#64748b">employee_manager.py</text>
+
+  <!-- Test Infrastructure -->
+  <rect x="1038" y="390" width="424" height="130" rx="6" fill="#1a2535" stroke="#0ea5e9" stroke-width="1.5"/>
+  <text x="1250" y="408" text-anchor="middle" font-size="11" font-weight="600" fill="#38bdf8">Test Infrastructure</text>
+  <line x1="1050" y1="415" x2="1450" y2="415" stroke="#1e3a4a" stroke-width="1"/>
+  <text x="1050" y="431" font-size="9.5" fill="#94a3b8">tests/conftest.py</text>
+  <text x="1155" y="431" font-size="9" fill="#64748b">browser, config, test_users fixtures (session-scoped)</text>
+  <text x="1050" y="445" font-size="9.5" fill="#94a3b8">environment_config.json</text>
+  <text x="1195" y="445" font-size="9" fill="#64748b">DEFAULT, parabank, pm_hub environments</text>
+  <text x="1050" y="459" font-size="9.5" fill="#94a3b8">test_users.json</text>
+  <text x="1145" y="459" font-size="9" fill="#64748b">Credentials (tests/data/)</text>
+  <text x="1050" y="473" font-size="9.5" fill="#94a3b8">report.html</text>
+  <text x="1130" y="473" font-size="9" fill="#64748b">Pytest HTML report (tests/_reports/)</text>
+  <line x1="1050" y1="481" x2="1450" y2="481" stroke="#1e3a4a" stroke-width="1"/>
+  <text x="1050" y="496" font-size="9" fill="#64748b">pytest tests/ -v --html=tests/_reports/report.html --self-contained-html</text>
+  <text x="1050" y="510" font-size="9" fill="#64748b">pytest tests/pm_assistant/ -v --env=pm_hub</text>
+
+  <!-- Current Test Inventory -->
+  <rect x="1038" y="534" width="424" height="180" rx="6" fill="#132010" stroke="#4ade80" stroke-width="1.5"/>
+  <text x="1250" y="552" text-anchor="middle" font-size="11" font-weight="600" fill="#86efac">Current Test Inventory  ·  11 tests passing</text>
+  <line x1="1050" y1="559" x2="1450" y2="559" stroke="#1e3a1e" stroke-width="1"/>
+
+  <text x="1050" y="575" font-size="9.5" font-weight="600" fill="#4ade80">tests/navigation/</text>
+  <text x="1050" y="588" font-size="9" fill="#94a3b8">test_navigation_smoke.py</text>
+  <text x="1200" y="588" font-size="9" fill="#64748b">5 parametrized sidebar nav cases</text>
+  <text x="1200" y="600" font-size="9" fill="#64748b">calendar, jira, jira/approvals, assistant, settings</text>
+
+  <text x="1050" y="617" font-size="9.5" font-weight="600" fill="#4ade80">tests/jira/</text>
+  <text x="1050" y="630" font-size="9" fill="#94a3b8">test_jira_issues.py</text>
+  <text x="1180" y="630" font-size="9" fill="#64748b">3 tests: page loads, project filter, expand</text>
+
+  <text x="1050" y="647" font-size="9.5" font-weight="600" fill="#4ade80">tests/pm_assistant/</text>
+  <text x="1050" y="660" font-size="9" fill="#94a3b8">test_pm_assistant_priorities.py</text>
+  <text x="1235" y="660" font-size="9" fill="#64748b">send message + verify response</text>
+  <text x="1050" y="673" font-size="9" fill="#94a3b8">test_pm_assistant_quick_actions.py</text>
+  <text x="1245" y="673" font-size="9" fill="#64748b">3 tests: buttons visible, blockers, new</text>
+
+  <text x="1050" y="690" font-size="9.5" font-weight="600" fill="#4ade80">tests/update/</text>
+  <text x="1050" y="703" font-size="9" fill="#94a3b8">test_update.py</text>
+  <text x="1155" y="703" font-size="9" fill="#64748b">update workflow tests</text>
+
+  <!-- Markers badge -->
+  <rect x="1050" y="714" width="400" height="24" rx="4" fill="#0a1a0a" stroke="#166534" stroke-width="1"/>
+  <text x="1250" y="730" text-anchor="middle" font-size="9" fill="#4ade80">markers: navigation · jira · pm_assistant · smoke (auto-registered)</text>
+
+  <!-- Import Convention -->
+  <rect x="1038" y="728" width="424" height="80" rx="6" fill="#1a1a2e" stroke="#334155" stroke-width="1.5"/>
+  <text x="1250" y="746" text-anchor="middle" font-size="11" font-weight="600" fill="#818cf8">Import Convention</text>
+  <text x="1050" y="762" font-size="9.5" fill="#4ade80">✓</text><text x="1065" y="762" font-size="9" fill="#94a3b8">from interfaces.browser_interface import BrowserInterface</text>
+  <text x="1050" y="776" font-size="9.5" fill="#4ade80">✓</text><text x="1065" y="776" font-size="9" fill="#94a3b8">from pages.pm_assistant.assistant_page import AssistantPage</text>
+  <text x="1050" y="790" font-size="9.5" fill="#ef4444">✗</text><text x="1065" y="790" font-size="9" fill="#64748b">from framework.interfaces… — ModuleNotFoundError (L005)</text>
+  <text x="1050" y="804" font-size="9.5" fill="#4ade80">✓</text><text x="1065" y="804" font-size="9" fill="#94a3b8">from .browser_interface import BrowserInterface  (inside framework/)</text>
+
+  <!-- Naming Conventions -->
+  <rect x="1038" y="820" width="424" height="100" rx="6" fill="#1a1a2e" stroke="#334155" stroke-width="1.5"/>
+  <text x="1250" y="838" text-anchor="middle" font-size="11" font-weight="600" fill="#818cf8">Naming Conventions</text>
+  <line x1="1050" y1="845" x2="1450" y2="845" stroke="#1e2a3a" stroke-width="1"/>
+  <text x="1050" y="861" font-size="9.5" fill="#94a3b8">Pages</text><text x="1100" y="861" font-size="9" fill="#64748b">{feature}_page.py  →  assistant_page.py</text>
+  <text x="1050" y="875" font-size="9.5" fill="#94a3b8">Tasks</text><text x="1100" y="875" font-size="9" fill="#64748b">{feature}_tasks.py  →  pm_assistant_tasks.py</text>
+  <text x="1050" y="889" font-size="9.5" fill="#94a3b8">Roles</text><text x="1100" y="889" font-size="9" fill="#64748b">{persona}_role.py  →  product_manager_role.py</text>
+  <text x="1050" y="903" font-size="9.5" fill="#94a3b8">Tests</text><text x="1100" y="903" font-size="9" fill="#64748b">test_{feature}.py  →  test_pm_assistant_priorities.py</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       BOTTOM LEGEND BAR
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <rect x="20" y="948" width="1460" height="24" rx="5" fill="#131622" stroke="#1e2433" stroke-width="1"/>
+
+  <rect x="35" y="956" width="10" height="10" rx="2" fill="#22c55e"/>
+  <text x="50" y="965" font-size="9" fill="#94a3b8">Kernel commands</text>
+
+  <rect x="175" y="956" width="10" height="10" rx="2" fill="#6366f1"/>
+  <text x="190" y="965" font-size="9" fill="#94a3b8">Work zone</text>
+
+  <rect x="290" y="956" width="10" height="10" rx="2" fill="#ef4444"/>
+  <text x="305" y="965" font-size="9" fill="#94a3b8">Failure path</text>
+
+  <rect x="400" y="956" width="10" height="10" rx="2" fill="#f59e0b"/>
+  <text x="415" y="965" font-size="9" fill="#94a3b8">Enforcement hooks</text>
+
+  <rect x="555" y="956" width="10" height="10" rx="2" fill="#4ade80"/>
+  <text x="570" y="965" font-size="9" fill="#94a3b8">Tests layer</text>
+
+  <rect x="650" y="956" width="10" height="10" rx="2" fill="#38bdf8"/>
+  <text x="665" y="965" font-size="9" fill="#94a3b8">Roles layer</text>
+
+  <rect x="745" y="956" width="10" height="10" rx="2" fill="#a78bfa"/>
+  <text x="760" y="965" font-size="9" fill="#94a3b8">Tasks layer</text>
+
+  <rect x="845" y="956" width="10" height="10" rx="2" fill="#fb923c"/>
+  <text x="860" y="965" font-size="9" fill="#94a3b8">Pages layer</text>
+
+  <rect x="945" y="956" width="10" height="10" rx="2" fill="#e879f9"/>
+  <text x="960" y="965" font-size="9" fill="#94a3b8">BrowserInterface</text>
+
+  <rect x="1075" y="956" width="10" height="10" rx="2" fill="#0ea5e9"/>
+  <text x="1090" y="965" font-size="9" fill="#94a3b8">Test infrastructure</text>
+
+  <text x="1300" y="965" font-size="9" fill="#334155">platform-selenium · Isagawa QA Platform · 2026</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ARROW MARKERS
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <defs>
+    <marker id="arrowGray" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#475569"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#ef4444"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#4ade80"/>
+    </marker>
+  </defs>
+
+</svg>

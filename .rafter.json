@@ -1,0 +1,6 @@
+{
+  "name": "platform-selenium",
+  "type": "python",
+  "port": 3360,
+  "startCmd": "python main.py"
+}

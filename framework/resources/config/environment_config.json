@@ -7,5 +7,11 @@
   },
   "twentyDemo": {
     "url": "https://your-crm-instance.example.com"
+  },
+  "pm_hub": {
+    "url": "http://localhost:3000"
+  },
+  "sovai": {
+    "url": "http://localhost:8180"
   }
 }

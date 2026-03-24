@@ -8,5 +8,13 @@
     "password": "YourPasswordHere",
     "workspace": "Testing WS",
     "workspace_url": "https://your-workspace.example.com"
+  },
+  "sovai_admin": {
+    "email": "admin@sovai.local",
+    "password": "SovAI-CRE-2026!"
+  },
+  "sovai_brian": {
+    "email": "brian@itsocialist.com",
+    "password": "sovai2025!"
   }
 }

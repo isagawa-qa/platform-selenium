@@ -97,9 +97,6 @@ def create_driver(headless=False, window_size="1920x1080", browser="chrome"):
 
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # Set implicit wait
-    driver.implicitly_wait(10)
-
     # Maximize window if not headless
     if not headless:
         driver.maximize_window()

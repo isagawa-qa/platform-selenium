@@ -53,12 +53,12 @@ def pytest_addoption(parser):
 # Fixtures
 # ------------------------------------------------------------------------------
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def driver(request):
     """
-    Create and teardown browser driver for each test.
+    Create and teardown browser driver once per session.
 
-    Function-scoped: New driver instance per test.
+    Session-scoped: One browser window shared across all tests.
     Supports Chrome and Brave via --browser flag.
     """
     headless = request.config.getoption("--headless")
@@ -102,12 +102,12 @@ def test_users():
         yield json.load(f)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def browser(driver, config):
     """
     Create BrowserInterface wrapper with driver, config, and logger.
 
-    Function-scoped: New instance per test.
+    Session-scoped: One instance shared across all tests.
     """
     yield BrowserInterface(driver, config, logger)
 

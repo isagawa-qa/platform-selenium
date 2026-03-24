@@ -297,6 +297,15 @@ class MissionControlPanel {
     stateWatcher.onDidCreate(() => this._sendState(), null, this._disposables);
     this._disposables.push(stateWatcher);
 
+    // Watch QA workflow state
+    const qaWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(workspaceRoot, 'tests/_state/workflow_state.json')
+    );
+    qaWatcher.onDidChange(() => this._sendState(), null, this._disposables);
+    qaWatcher.onDidCreate(() => this._sendState(), null, this._disposables);
+    qaWatcher.onDidDelete(() => this._sendState(), null, this._disposables);
+    this._disposables.push(qaWatcher);
+
     // Watch events.jsonl for new lines
     const eventsWatcher = vscode.workspace.createFileSystemWatcher(
       new vscode.RelativePattern(workspaceRoot, '.claude/state/events.jsonl')
@@ -347,6 +356,11 @@ class MissionControlPanel {
     const inbox       = readJsonSafe(path.join(stateDir, 'inbox.json'));
     const outbox      = readJsonSafe(path.join(stateDir, 'outbox.json'));
 
+    // QA workflow state
+    const qaStatePath = path.join(this._workspaceRoot, 'tests', '_state', 'workflow_state.json');
+    const qaState     = readJsonSafe(qaStatePath);
+    const qaActive    = Object.keys(qaState).length > 0;
+
     this._panel.webview.postMessage({
       command:        'state',
       domain:         domain ?? 'none',
@@ -360,6 +374,10 @@ class MissionControlPanel {
       inboxSkill:     typeof inbox.skill  === 'string'  ? inbox.skill   : null,
       outboxStatus:   typeof outbox.status === 'string' ? outbox.status : null,
       outboxSkill:    typeof outbox.skill  === 'string' ? outbox.skill  : null,
+      qaActive,
+      qaStep:         typeof qaState.step   === 'number' ? qaState.step   : 0,
+      qaStepStatus:   typeof qaState.status === 'string' ? qaState.status : null,
+      qaData:         (qaState.data && typeof qaState.data === 'object') ? qaState.data : null,
     });
   }
 
@@ -477,6 +495,54 @@ class MissionControlPanel {
   .skill-btn.contextual.visible { display: inline; }
   .skill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   #skill-status { font-size: 11px; color: var(--vscode-descriptionForeground); }
+  /* QA workflow stepper */
+  #qa-workflow {
+    display: none;
+    padding: 6px 12px 7px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    background: var(--vscode-sideBar-background);
+    flex-shrink: 0;
+  }
+  #qa-workflow.visible { display: block; }
+  #qa-workflow-header {
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--vscode-descriptionForeground); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #qa-workflow-header span { font-size: 11px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  #qa-steps {
+    display: flex; align-items: center; gap: 0;
+  }
+  .qa-step {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    flex: 1; position: relative;
+  }
+  .qa-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 8px; left: calc(50% + 10px);
+    width: calc(100% - 20px); height: 1px;
+    background: var(--vscode-panel-border);
+  }
+  .qa-step.done:not(:last-child)::after   { background: #2a6a2a; }
+  .qa-step.active:not(:last-child)::after { background: var(--vscode-panel-border); }
+  .qa-step-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1px solid var(--vscode-panel-border);
+    background: var(--vscode-editor-background);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; z-index: 1;
+    color: var(--vscode-descriptionForeground);
+  }
+  .qa-step.done   .qa-step-dot { background: #1a4a1a; border-color: #2a6a2a; color: #4ec94e; }
+  .qa-step.active .qa-step-dot { background: #1a3a5a; border-color: #569cd6; color: #569cd6; }
+  .qa-step-label {
+    font-size: 9px; text-align: center; line-height: 1.2;
+    color: var(--vscode-descriptionForeground); max-width: 56px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .qa-step.done   .qa-step-label { color: #4ec94e; }
+  .qa-step.active .qa-step-label { color: #569cd6; font-weight: 600; }
   #events-label {
     padding: 5px 12px 3px;
     font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
@@ -575,6 +641,16 @@ class MissionControlPanel {
   <button class="skill-btn"            id="sk-tests"  data-skill="/run-test"       title="/run-test">▶ Tests</button>
   <button class="skill-btn"            id="sk-state"  data-skill="__view_state"    title="Open state file">👁 State</button>
   <span id="skill-status"></span>
+</div>
+<div id="qa-workflow">
+  <div id="qa-workflow-header">QA Workflow <span id="qa-workflow-context"></span></div>
+  <div id="qa-steps">
+    <div class="qa-step" data-step="1"><div class="qa-step-dot">1</div><div class="qa-step-label">Discover</div></div>
+    <div class="qa-step" data-step="2"><div class="qa-step-dot">2</div><div class="qa-step-label">Pre-flight</div></div>
+    <div class="qa-step" data-step="3"><div class="qa-step-dot">3</div><div class="qa-step-label">AI Process</div></div>
+    <div class="qa-step" data-step="4"><div class="qa-step-dot">4</div><div class="qa-step-label">Build</div></div>
+    <div class="qa-step" data-step="5"><div class="qa-step-dot">5</div><div class="qa-step-label">Verify</div></div>
+  </div>
 </div>
 <div id="events-label">Live Events</div>
 <div id="events"><div id="empty">No events yet.</div></div>
@@ -721,9 +797,44 @@ class MissionControlPanel {
     if (!paused) container.scrollTop = container.scrollHeight;
   }
 
+  function updateQaWorkflow(msg) {
+    const panel = document.getElementById('qa-workflow');
+    if (!msg.qaActive) { panel.classList.remove('visible'); return; }
+    panel.classList.add('visible');
+
+    const currentStep = msg.qaStep || 0;
+    const isComplete  = msg.qaStepStatus === 'complete';
+
+    // Context label: show persona + workflow if available
+    const ctx = document.getElementById('qa-workflow-context');
+    if (msg.qaData) {
+      const parts = [];
+      if (msg.qaData.persona)  parts.push(msg.qaData.persona);
+      if (msg.qaData.workflow) parts.push(msg.qaData.workflow);
+      ctx.textContent = parts.length ? '· ' + parts.join(' · ') : '';
+    } else {
+      ctx.textContent = '';
+    }
+
+    document.querySelectorAll('.qa-step').forEach(el => {
+      const step = parseInt(el.getAttribute('data-step'), 10);
+      el.classList.remove('done', 'active');
+      const dot = el.querySelector('.qa-step-dot');
+      if (step < currentStep || (step === currentStep && isComplete)) {
+        el.classList.add('done');
+        dot.textContent = '✓';
+      } else if (step === currentStep && !isComplete) {
+        el.classList.add('active');
+        dot.textContent = step;
+      } else {
+        dot.textContent = step;
+      }
+    });
+  }
+
   window.addEventListener('message', ev => {
     const msg = ev.data;
-    if      (msg.command === 'state')        { updateStatus(msg); updateSkills(msg); }
+    if      (msg.command === 'state')        { updateStatus(msg); updateSkills(msg); updateQaWorkflow(msg); }
     else if (msg.command === 'allEvents')    setAllEvents(msg.events);
     else if (msg.command === 'appendEvents') appendEvents(msg.events);
   });

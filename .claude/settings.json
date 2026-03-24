@@ -16,17 +16,6 @@
           }
         ]
       }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python /Users/briandawson/workspace/platform-selenium/.claude/hooks/test-failure-detector.py"
-          }
-        ]
-      }
     ]
   }
 }
