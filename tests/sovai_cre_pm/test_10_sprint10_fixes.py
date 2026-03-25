@@ -7,16 +7,111 @@ Verifies:
   #42: Dashboard keyword detection triggers artifact output
   #44: Post-tool artifact rendering (MCP data → dashboard, not raw JSON)
   #30: CSS text readability (links, table content visible)
+  Zero Hallucination: MCP availability detection + fabrication guards
 
 Uses AAA pattern: Arrange, Act, Assert.
 """
 
 import pytest
 import time
+import socket
+import urllib.request
+import urllib.error
 from resources.utilities import autologger
 from roles.sovai.admin_role import AdminRole
 from pages.sovai.login_page import LoginPage
 from pages.sovai.chat_page import ChatPage
+
+
+# ==============================================================================
+# ZERO HALLUCINATION — Fabrication Detection
+# ==============================================================================
+
+# Phrases that indicate the agent fabricated data instead of using real tool output.
+# If ANY of these appear in a response after a tool call, the test MUST FAIL.
+FABRICATION_MARKERS = [
+    "sample data",
+    "example data",
+    "demo data",
+    "hypothetical",
+    "illustrative",
+    "for demonstration",
+    "let me create some",
+    "realistic sample",
+    "mock data",
+    "placeholder",
+    "simulated",
+    "fictional",
+    "i'll generate some",
+    "i'll create some",
+    "let me generate",
+    "made-up",
+    "fabricated",
+    "imaginary data",
+    "realistic example",
+    "sample portfolio",
+    "sample properties",
+    "let me build a sample",
+    "i'll use sample",
+    "i'll use example",
+    "i'll create a realistic",
+]
+
+# MCP server endpoints — must be reachable for tool-dependent tests
+MCP_SERVERS = {
+    "appfolio": {"host": "localhost", "port": 3001, "path": "/mcp"},
+    "rentometer": {"host": "localhost", "port": 3002, "path": "/mcp"},
+    "loopnet": {"host": "localhost", "port": 3003, "path": "/mcp"},
+    "mls": {"host": "localhost", "port": 3004, "path": "/mcp"},
+}
+
+
+def check_mcp_server_health(server_name: str, timeout: float = 3.0) -> tuple[bool, str]:
+    """
+    Check if an MCP server is reachable via TCP socket probe.
+
+    Returns:
+        (is_healthy, message) — True if the port is open, False with error message if not.
+    """
+    server = MCP_SERVERS.get(server_name)
+    if not server:
+        return False, f"Unknown MCP server: {server_name}"
+
+    try:
+        sock = socket.create_connection(
+            (server["host"], server["port"]), timeout=timeout
+        )
+        sock.close()
+        return True, f"{server_name} MCP server is reachable on port {server['port']}"
+    except (socket.timeout, ConnectionRefusedError, OSError) as e:
+        return False, (
+            f"{server_name} MCP server is NOT reachable on port {server['port']}: {e}"
+        )
+
+
+def assert_no_fabrication(response_text: str, context: str = ""):
+    """
+    Assert that agent response does NOT contain fabrication markers.
+
+    This is the zero-hallucination guard. If an agent produces 'sample data'
+    or 'demo data' instead of reporting a tool failure, this fails the test.
+
+    Args:
+        response_text: The full agent response text.
+        context: Optional context string for better error messages.
+    """
+    response_lower = response_text.lower()
+    found_markers = [
+        marker for marker in FABRICATION_MARKERS
+        if marker in response_lower
+    ]
+
+    assert not found_markers, (
+        f"ZERO HALLUCINATION VIOLATION{f' ({context})' if context else ''}: "
+        f"Agent fabricated data instead of reporting tool failure. "
+        f"Found markers: {found_markers}. "
+        f"Response excerpt: {response_text[:500]}"
+    )
 
 
 class TestSprint10CSSFixes:
@@ -321,6 +416,9 @@ class TestSprint10FACETSConfig:
             f"FACETS rendering may have failed due to max_tokens limit (#35)."
         )
 
+        # ZERO HALLUCINATION: Verify no fabricated data
+        assert_no_fabrication(response, "FACETS rendering test")
+
         # Check browser console for Bedrock errors
         console_errors = self.browser.execute_script(
             "return window.__SOVAI_ERRORS__ || [];"
@@ -406,6 +504,9 @@ class TestSprint10DashboardDetection:
 
         response = self.chat_page.get_last_response_text()
 
+        # ZERO HALLUCINATION: Verify no fabricated data
+        assert_no_fabrication(response, "show_me keyword dashboard")
+
         # The agent should produce EITHER:
         # 1. An HTML artifact (iframe/button), OR
         # 2. A substantial response with structured data
@@ -444,6 +545,9 @@ class TestSprint10DashboardDetection:
             self.chat_page.has_code_block(timeout=5)
         )
 
+        # ZERO HALLUCINATION: Verify no fabricated data
+        assert_no_fabrication(response, "visualize keyword dashboard")
+
         assert has_artifact or len(response) > 300, (
             f"REGRESSION #42: 'Visualize' keyword did not trigger artifact. "
             f"Response length: {len(response)}."
@@ -477,6 +581,9 @@ class TestSprint10DashboardDetection:
             "Agent should produce a response"
 
         response = self.chat_page.get_last_response_text()
+
+        # ZERO HALLUCINATION: Verify no fabricated data
+        assert_no_fabrication(response, "post-tool dashboard rendering")
 
         # Raw JSON dump indicators
         raw_json_markers = [
@@ -580,6 +687,9 @@ class TestSprint10ExportCapability:
         response = self.chat_page.get_last_response_text()
         response_lower = response.lower()
 
+        # ZERO HALLUCINATION: Verify no fabricated data
+        assert_no_fabrication(response, "export toolbar test")
+
         # Verify export-related content exists in response or artifact
         export_indicators = [
             "download pdf", "download excel", "export",
@@ -624,6 +734,9 @@ class TestSprint10ExportCapability:
         # Look for jsPDF or SheetJS references in response text or code blocks
         response = self.chat_page.get_last_response_text()
         response_lower = response.lower()
+
+        # ZERO HALLUCINATION: Verify no fabricated data
+        assert_no_fabrication(response, "jsPDF CDN test")
 
         cdn_markers = [
             "jspdf", "html2canvas", "sheetjs", "xlsx",
@@ -687,8 +800,242 @@ class TestSprint10ExportCapability:
 
         response = self.chat_page.get_last_response_text()
 
+        # ZERO HALLUCINATION: Verify no fabricated data
+        assert_no_fabrication(response, "XLSX multi-sheet test")
+
         # Response should be substantial (dashboard + export)
         assert len(response) > 200, (
             f"FEATURE #56: Response too short ({len(response)} chars). "
             f"Expected dashboard with export buttons."
+        )
+
+
+class TestMCPAvailabilityAndZeroHallucination:
+    """
+    MCP server health checks and zero-hallucination enforcement.
+
+    Pre-flight checks that MCP servers are reachable before running
+    integration tests. If servers are DOWN, these tests FAIL — they
+    do NOT silently pass with fabricated data.
+
+    Also includes a live agent test that verifies the agent correctly
+    reports tool failures instead of fabricating data.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self, browser, config, test_users):
+        """Pytest fixture wires browser, config, and test data into the test class."""
+        self.browser = browser
+        self.config = config
+        self.test_users = test_users
+        self.login_page = LoginPage(self.browser)
+        self.chat_page = ChatPage(self.browser)
+
+    def _ensure_authenticated(self):
+        """Ensure we're logged in before tests."""
+        base_url = self.config["url"]
+        current_url = self.browser.get_current_url()
+        if base_url.rstrip("/") in current_url and "/login" not in current_url:
+            return
+        credentials = self.test_users["sovai_admin"]
+        admin = AdminRole(
+            self.browser,
+            base_url=base_url,
+            email=credentials["email"],
+            password=credentials["password"]
+        )
+        admin.login_and_verify()
+
+    def _get_admin(self):
+        """Create and return an admin role instance."""
+        credentials = self.test_users["sovai_admin"]
+        return AdminRole(
+            self.browser,
+            base_url=self.config["url"],
+            email=credentials["email"],
+            password=credentials["password"]
+        )
+
+    # ==================== MCP HEALTH CHECKS ====================
+
+    @pytest.mark.sovai
+    @pytest.mark.mcp
+    @pytest.mark.smoke
+    @autologger.automation_logger("Test")
+    def test_appfolio_mcp_server_reachable(self):
+        """
+        Pre-flight: AppFolio MCP server must be reachable on port 3001.
+
+        If this fails, ALL tests using appfolio_* tools are invalid
+        because the agent will fabricate data.
+        """
+        is_healthy, msg = check_mcp_server_health("appfolio")
+        assert is_healthy, (
+            f"MCP PRE-FLIGHT FAILURE: {msg}. "
+            f"All tests using AppFolio tools will produce fabricated data. "
+            f"Start the server: cd ~/workspace/appfolio-mcp-server && "
+            f"TRANSPORT=http PORT=3001 node dist/index.js"
+        )
+
+    @pytest.mark.sovai
+    @pytest.mark.mcp
+    @pytest.mark.smoke
+    @autologger.automation_logger("Test")
+    def test_rentometer_mcp_server_reachable(self):
+        """
+        Pre-flight: Rentometer MCP server must be reachable on port 3002.
+        """
+        is_healthy, msg = check_mcp_server_health("rentometer")
+        assert is_healthy, (
+            f"MCP PRE-FLIGHT FAILURE: {msg}. "
+            f"Start the server: cd ~/workspace/rentometer-mcp-server && "
+            f"TRANSPORT=http PORT=3002 node dist/index.js"
+        )
+
+    @pytest.mark.sovai
+    @pytest.mark.mcp
+    @pytest.mark.smoke
+    @autologger.automation_logger("Test")
+    def test_loopnet_mcp_server_reachable(self):
+        """
+        Pre-flight: LoopNet MCP server must be reachable on port 3003.
+        """
+        is_healthy, msg = check_mcp_server_health("loopnet")
+        assert is_healthy, (
+            f"MCP PRE-FLIGHT FAILURE: {msg}. "
+            f"Start the server: cd ~/workspace/loopnet-mcp-server && "
+            f"TRANSPORT=http PORT=3003 node dist/index.js"
+        )
+
+    @pytest.mark.sovai
+    @pytest.mark.mcp
+    @pytest.mark.smoke
+    @autologger.automation_logger("Test")
+    def test_mls_mcp_server_reachable(self):
+        """
+        Pre-flight: MLS MCP server must be reachable on port 3004.
+        """
+        is_healthy, msg = check_mcp_server_health("mls")
+        assert is_healthy, (
+            f"MCP PRE-FLIGHT FAILURE: {msg}. "
+            f"Start the server: cd ~/workspace/mls-mcp-server && "
+            f"TRANSPORT=http PORT=3004 node dist/index.js"
+        )
+
+    # ==================== ZERO HALLUCINATION LIVE TEST ====================
+
+    @pytest.mark.sovai
+    @pytest.mark.mcp
+    @pytest.mark.hallucination
+    @autologger.automation_logger("Test")
+    def test_agent_does_not_fabricate_data_on_tool_call(self):
+        """
+        ZERO HALLUCINATION: When an agent calls an MCP tool, the response
+        must contain data from the tool — NOT fabricated "sample data."
+
+        This test:
+        1. Checks if AppFolio MCP is reachable
+        2. Sends a prompt that requires tool invocation
+        3. If server IS reachable: verifies response has no fabrication markers
+        4. If server is NOT reachable: verifies agent reports the failure
+           (not silently fabricates)
+        """
+        self._ensure_authenticated()
+        admin = self._get_admin()
+
+        appfolio_healthy, health_msg = check_mcp_server_health("appfolio")
+
+        self.chat_page.start_new_chat()
+
+        admin.select_agent_and_send(
+            "Rent Roll Analyst",
+            "Use the appfolio_list_properties tool to pull ALL properties. "
+            "List every property name and its address. "
+            "Do NOT use sample data. Only show data from the tool."
+        )
+        time.sleep(25)
+
+        assert self.chat_page.has_assistant_response(), \
+            "Agent should produce a response"
+
+        response = self.chat_page.get_last_response_text()
+
+        # PRIMARY ASSERTION: No fabrication markers
+        assert_no_fabrication(response, "live MCP tool call")
+
+        if not appfolio_healthy:
+            # If the server is down, the agent MUST report the failure
+            # using the [MCP_TOOL_FAILURE] marker or equivalent language
+            failure_indicators = [
+                "mcp_tool_failure",
+                "unable to retrieve",
+                "unavailable",
+                "not reachable",
+                "connection refused",
+                "could not connect",
+                "tool call failed",
+                "error",
+                "failed to",
+                "cannot access",
+                "not available",
+                "timed out",
+            ]
+            response_lower = response.lower()
+            reported_failure = any(
+                ind in response_lower for ind in failure_indicators
+            )
+
+            assert reported_failure, (
+                f"ZERO HALLUCINATION VIOLATION: AppFolio MCP is DOWN "
+                f"({health_msg}) but the agent did NOT report a tool failure. "
+                f"It may have fabricated data silently. "
+                f"Response excerpt: {response[:500]}"
+            )
+
+    @pytest.mark.sovai
+    @pytest.mark.mcp
+    @pytest.mark.hallucination
+    @autologger.automation_logger("Test")
+    def test_agent_response_cites_data_source(self):
+        """
+        DATA PROVENANCE: Agent responses that present numbers must
+        reference where the data came from — either a tool call
+        or user-provided data.
+
+        This catches subtle hallucination where the agent presents
+        numbers without any source and the user assumes they're real.
+        """
+        self._ensure_authenticated()
+        admin = self._get_admin()
+
+        self.chat_page.start_new_chat()
+
+        admin.select_agent_and_send(
+            "Investor Report Generator",
+            "Use the appfolio_list_properties and appfolio_list_tenants tools. "
+            "Generate an investor summary with NOI, occupancy, and revenue. "
+            "Cite the data source for every number."
+        )
+        time.sleep(30)
+
+        assert self.chat_page.has_assistant_response(), \
+            "Agent should produce a response"
+
+        response = self.chat_page.get_last_response_text()
+
+        # ZERO HALLUCINATION: No fabricated data
+        assert_no_fabrication(response, "investor report data provenance")
+
+        # Verify the agent isn't silently presenting data without source
+        response_lower = response.lower()
+        has_source_reference = any(ind in response_lower for ind in [
+            "appfolio", "tool", "retrieved", "from the",
+            "data source", "pulled from", "mcp_tool_failure",
+            "unable to", "unavailable", "based on",
+        ])
+
+        assert has_source_reference, (
+            f"DATA PROVENANCE: Agent presented data without citing its source. "
+            f"Response must reference the tool or data source used. "
+            f"Response excerpt: {response[:500]}"
         )
