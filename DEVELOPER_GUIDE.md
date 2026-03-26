@@ -61,6 +61,18 @@ Or add this line to your project's `CLAUDE.md`:
 @/path/to/platform-selenium/INTEGRATION.md
 ```
 
+Once configured, use this prompt to activate the integration in your Claude session:
+
+```
+I'm working on [your app name]. The Isagawa platform-selenium test framework
+is checked out at /path/to/platform-selenium. Please read
+/path/to/platform-selenium/INTEGRATION.md so you understand how to generate
+and run tests for this project.
+```
+
+Claude will confirm it has read the file and is ready to generate tests or run
+existing ones against your app.
+
 ---
 
 ## Step 3: Generate Tests for Your App
