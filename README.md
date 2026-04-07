@@ -2,9 +2,9 @@
 
 ### AI Execution Management for Test Automation
 
-> AI can generate tests. But can you trust it to execute correctly?
+> "AI can generate tests. But can you trust it to execute correctly?"
 
-Most AI tools watch what happened and report after the fact. Isagawa **enforces how AI works** gating every action at runtime so the AI can only do it right.
+Most AI tools watch what happened and report after the fact. Isagawa **enforces how AI works** — gating every action at runtime so the AI can only do it right.
 
 This isn't AI governance. It's **AI execution management**.
 
@@ -87,7 +87,7 @@ Claude Code is the AI agent that builds tests for you inside VS Code.
 2. In the search box, type: `Claude Code`
 3. Find **"Claude Code"** by Anthropic — click **Install**
 4. Wait for the install to finish
-5. You will see a **sparkle icon (✱)** appear in the top-right area of VS Code
+5. You will see a **sparkle icon (&#10033;)** appear in the top-right area of VS Code
 
 > **You need an Anthropic account.** If you do not have one, go to https://claude.ai and create an account first.
 
@@ -110,7 +110,7 @@ Do this inside VS Code. Do not use a separate terminal.
 
 This step is important. Claude Code needs to be inside the project folder to work correctly.
 
-1. In VS Code, click **File** → **Open Folder**
+1. In VS Code, click **File** > **Open Folder**
 2. Find and select the `platform-selenium` folder on your Desktop
 3. Click **Select Folder** (Windows) or **Open** (Mac)
 4. VS Code will reload with the project open
@@ -147,7 +147,7 @@ This step is important. Claude Code needs to be inside the project folder to wor
 
 The AI agent uses Playwright MCP to open a browser and discover page elements.
 
-1. Click the **sparkle icon (✱)** in VS Code to open Claude Code
+1. Click the **sparkle icon (&#10033;)** in VS Code to open Claude Code
 2. Type:
    ```
    /mcp
@@ -168,7 +168,7 @@ If you see errors, go to the [Troubleshooting](#troubleshooting) section below.
 
 ### Step 11: Create Your First Test
 
-1. In Claude Code (click the **sparkle icon ✱** if it is not open), type:
+1. In Claude Code (click the **sparkle icon &#10033;** if it is not open), type:
    ```
    /qa-workflow
    ```
@@ -278,11 +278,11 @@ AI can generate Selenium tests in seconds. But without enforcement:
 - The same mistakes repeat across every session
 - You spend more time fixing AI output than writing tests yourself
 
-**The cycle:** Generate → breaks something → fix → generate → breaks it differently → start over.
+**The cycle:** Generate > breaks something > fix > generate > breaks it differently > start over.
 
 ## The Solution
 
-The Isagawa QA Platform combines a **5-layer test architecture** with the **Isagawa Kernel** a self-building, self-improving enforcement system that runs *inside* the AI agent.
+The Isagawa QA Platform combines a **5-layer test architecture** with the **Isagawa Kernel** — a self-building, self-improving enforcement system that runs *inside* the AI agent.
 
 The kernel doesn't monitor the AI from outside. It **manages the AI from within**. The AI learns your standards, enforces them automatically, and gets permanently smarter after every failure.
 
@@ -302,26 +302,561 @@ Every test follows a strict separation of concerns. Each layer has one job:
 
 ```
 Test (Arrange / Act / Assert)
-  └─→ Role (multi-task workflow, user persona)
-       └─→ Task (single domain operation)
-            └─→ Page Object (one page, atomic actions, fluent API)
-                 └─→ BrowserInterface (Selenium wrapper, waits, logging)
+  └── Role (multi-task workflow, user persona)
+       └── Task (single domain operation)
+            └── Page Object (one page, atomic actions, fluent API)
+                 └── BrowserInterface (Selenium wrapper, waits, logging)
 ```
 
-**Key rules:**
+### Key Rules
+
 - Locators live *only* in Page Objects, never in Tasks, Roles, or Tests
-- Tasks and Roles never return values, Tests assert through POM state-check methods
-- Tests orchestrate Roles to execute business workflows, multi-role workflows are supported
+- Tasks and Roles never return values — Tests assert through POM state-check methods
+- Tests orchestrate Roles to execute business workflows — multi-role workflows are supported
 - `@autologger` decorator on every Task, Role, and Test method
 
 ---
 
-## How It Works
+## Real Code Examples
+
+The framework ships with canonical reference implementations in `framework/_reference/`. The AI agent reads these before generating any code — ensuring every test follows the exact same patterns.
+
+### Page Object (LoginPage)
+
+Page Objects own all locators for a single page. Methods are atomic (one UI action) and return `self` for fluent chaining:
+
+```python
+from selenium.webdriver.common.by import By
+from interfaces.browser_interface import BrowserInterface
+
+
+class LoginPage:
+    """
+    - NO decorators on methods
+    - Locators as class constants
+    - Atomic methods (one UI action)
+    - Return self for chaining
+    - State-check methods for assertions
+    """
+
+    def __init__(self, browser: BrowserInterface):
+        """Compose BrowserInterface — NO inheritance."""
+        self.browser = browser
+
+    # ==================== LOCATORS (Class Constants) ====================
+
+    LOG_IN_BUTTON = (By.CSS_SELECTOR, "[data-testid='button-goto-login']")
+    EMAIL_INPUT = (By.CSS_SELECTOR, "[data-testid='input-email']")
+    PASSWORD_INPUT = (By.CSS_SELECTOR, "[data-testid='input-password']")
+    SIGN_IN_BUTTON = (By.CSS_SELECTOR, "[data-testid='button-sign-in']")
+
+    # ==================== ATOMIC METHODS ====================
+
+    def click_log_in(self) -> "LoginPage":
+        """Click the Log In button to reveal the login form."""
+        self.browser.click(*self.LOG_IN_BUTTON)
+        return self
+
+    def enter_email(self, email: str) -> "LoginPage":
+        """Enter email address."""
+        self.browser.enter_text(*self.EMAIL_INPUT, email)
+        return self
+
+    def enter_password(self, password: str) -> "LoginPage":
+        """Enter password."""
+        self.browser.enter_text(*self.PASSWORD_INPUT, password)
+        return self
+
+    def click_sign_in(self) -> "LoginPage":
+        """Click the Sign In button."""
+        self.browser.click(*self.SIGN_IN_BUTTON)
+        return self
+
+    # ==================== STATE-CHECK METHODS ====================
+
+    def is_on_dashboard(self) -> bool:
+        """Check if redirected to dashboard after login."""
+        return "/dashboard" in self.browser.get_current_url()
+```
+
+### Task (EmployeeManagementTasks)
+
+Tasks compose Page Objects and perform one domain operation. Methods chain POM calls fluently:
+
+```python
+from interfaces.browser_interface import BrowserInterface
+from _reference.pages.login_page import LoginPage
+from _reference.pages.employees_page import EmployeesPage
+from resources.utilities import autologger
+
+
+class EmployeeManagementTasks:
+    """
+    - @autologger("Task") on all methods
+    - Composes Page Objects
+    - One domain operation per method
+    - NO return values
+    """
+
+    def __init__(self, browser: BrowserInterface):
+        self.browser = browser
+        self.login_page = LoginPage(browser)
+        self.employees_page = EmployeesPage(browser)
+
+    @autologger.automation_logger("Task")
+    def login(self, login_url: str, email: str, password: str) -> None:
+        """Login with provided credentials."""
+        (self.login_page
+            .navigate(login_url)
+            .wait_for_login_button_visible()
+            .click_log_in()
+            .wait_for_email_visible()
+            .enter_email(email)
+            .enter_password(password)
+            .click_sign_in())
+
+    @autologger.automation_logger("Task")
+    def create_employee(self, name: str, description: str = "",
+                        capabilities: str = "") -> None:
+        """Navigate to employees page and create a new employee."""
+        (self.employees_page
+            .navigate_to_employees()
+            .wait_for_employees_page()
+            .click_create_employee()
+            .wait_for_modal_visible()
+            .enter_employee_name(name)
+            .click_role_dropdown()
+            .select_analyst_role()
+            .enter_employee_description(description)
+            .enter_employee_capabilities(capabilities)
+            .click_submit_create()
+            .wait_for_employee_created_toast())
+```
+
+### Role (EmployeeManager)
+
+Roles represent user personas. They compose Tasks and orchestrate multi-step business workflows:
+
+```python
+from interfaces.browser_interface import BrowserInterface
+from resources.utilities import autologger
+from _reference.tasks.employee_management_tasks import EmployeeManagementTasks
+
+
+class EmployeeManager:
+    """
+    - @autologger("Role") on workflow methods
+    - @autologger("Role Constructor") on __init__
+    - Composes Task modules
+    - Workflow methods call MULTIPLE tasks
+    - NO return values
+    """
+
+    @autologger.automation_logger("Role Constructor")
+    def __init__(self, browser_interface: BrowserInterface, login_url: str,
+                 email: str, password: str):
+        self.browser = browser_interface
+        self.login_url = login_url
+        self.email = email
+        self.password = password
+        self.employee_management_tasks = EmployeeManagementTasks(browser_interface)
+
+    @autologger.automation_logger("Role")
+    def create_employee(self, name: str, description: str = "",
+                        capabilities: str = "") -> None:
+        """
+        Complete workflow: Login and create an employee.
+
+        Orchestrates MULTIPLE task operations:
+        1. Login with credentials
+        2. Create employee with specified details
+        """
+        self.employee_management_tasks.login(
+            self.login_url, self.email, self.password)
+        self.employee_management_tasks.create_employee(
+            name, description, capabilities)
+```
+
+### Test (End-to-End Integration)
+
+Tests use the AAA pattern (Arrange, Act, Assert). They orchestrate Roles and assert through Page Object state-check methods:
+
+```python
+import pytest
+from resources.utilities import autologger
+from _reference.roles.employee_manager import EmployeeManager
+from _reference.roles.task_manager import TaskManager
+from _reference.pages.employees_page import EmployeesPage
+from _reference.pages.tasks_page import TasksPage
+
+
+class TestE2ECreateEmployeeAndAssignTask:
+    """
+    - @autologger("Test") decorator
+    - MULTIPLE Role workflow calls (integration test)
+    - Assert via Page Object state-check methods
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self, browser, config, test_users):
+        self.browser = browser
+        self.config = config
+        self.test_users = test_users
+        self.employees_page = EmployeesPage(self.browser)
+        self.tasks_page = TasksPage(self.browser)
+
+    @pytest.mark.employee_management
+    @pytest.mark.task_management
+    @autologger.automation_logger("Test")
+    def test_e2e_create_employee_and_assign_task(self):
+        """Integration test: create employee then assign a task."""
+
+        # ==================== ARRANGE ====================
+        credentials = self.test_users["admin"]
+        login_url = self.config["url"] + "/auth/login"
+        employee_name = "Research Assistant"
+        task_title = "Research competitor pricing"
+
+        employee_manager = EmployeeManager(
+            self.browser, login_url=login_url,
+            email=credentials["email"], password=credentials["password"]
+        )
+        task_manager = TaskManager(
+            self.browser, login_url=login_url,
+            email=credentials["email"], password=credentials["password"]
+        )
+
+        # ==================== ACT — Phase 1 ====================
+        employee_manager.create_employee(
+            name=employee_name,
+            description="Analyzes market trends",
+            capabilities="data analysis, reporting"
+        )
+
+        # ==================== ASSERT — Phase 1 ====================
+        assert self.employees_page.is_employee_created_toast_displayed(), \
+            "Toast 'Employee created' should be displayed"
+        assert self.employees_page.is_employee_displayed_in_list(employee_name), \
+            f"Employee '{employee_name}' should be in the list"
+
+        # ==================== ACT — Phase 2 ====================
+        task_manager.assign_task_to_employee_continue(
+            title=task_title,
+            description="Analyze competitor pricing strategies",
+            assignee_name=employee_name
+        )
+
+        # ==================== ASSERT — Phase 2 ====================
+        assert self.tasks_page.is_task_created_toast_displayed(), \
+            "Toast 'Task created' should be displayed"
+        assert self.tasks_page.is_task_assigned_to(employee_name), \
+            f"Task should be assigned to '{employee_name}'"
+```
+
+---
+
+## BrowserInterface
+
+The foundation layer. Every browser interaction flows through BrowserInterface — navigation, clicking, typing, waiting, screenshots. No test code touches Selenium directly.
+
+```python
+class BrowserInterface:
+    """Selenium WebDriver wrapper with logging, screenshots, and waits."""
+
+    DEFAULT_EXPLICIT_WAIT = 20
+
+    def __init__(self, driver: WebDriver, config: dict, logger: logging.Logger):
+        self.driver = driver
+        self.config = config
+        self.logger = logger
+
+    def navigate_to(self, url: str) -> None:
+        """Navigate to a URL."""
+        self.driver.get(url)
+        self.logger.info(f"Navigated to: {url}")
+
+    def click(self, by: By, value: str) -> None:
+        """Click an element after waiting for it to be clickable."""
+        element = WebDriverWait(self.driver, self.explicit_wait).until(
+            EC.element_to_be_clickable((by, value)))
+        element.click()
+
+    def enter_text(self, by: By, value: str, text: str) -> None:
+        """Clear and type text into an element."""
+        element = WebDriverWait(self.driver, self.explicit_wait).until(
+            EC.visibility_of_element_located((by, value)))
+        element.clear()
+        element.send_keys(text)
+
+    def wait_for_element_visible(self, by: By, value: str,
+                                  timeout: int = None) -> WebElement:
+        """Wait for element to be visible."""
+        wait_time = timeout or self.explicit_wait
+        return WebDriverWait(self.driver, wait_time).until(
+            EC.visibility_of_element_located((by, value)))
+
+    def get_current_url(self) -> str:
+        """Get the current page URL."""
+        return self.driver.current_url
+```
+
+**Critical rule:** Before writing ANY browser interaction in a Page Object, check if BrowserInterface already has the method. If it doesn't, ask before creating a workaround. Never use `time.sleep()` — always use explicit waits.
+
+---
+
+## Autologger
+
+Every Task, Role, and Test method gets the `@autologger` decorator. It logs entry/exit with timing automatically:
+
+```python
+def automation_logger(category=""):
+    """
+    Decorator factory for logging function entry/exit.
+
+    Usage:
+        @autologger.automation_logger("Test")
+        def test_login(self):
+            ...
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            prefix = f"[{category}] " if category else ""
+            logger.info(f"{prefix}{func.__name__} - START")
+            start_time = datetime.now()
+            try:
+                result = func(*args, **kwargs)
+                duration = (datetime.now() - start_time).total_seconds()
+                logger.info(f"{prefix}{func.__name__} - END ({duration:.2f}s)")
+                return result
+            except Exception as e:
+                duration = (datetime.now() - start_time).total_seconds()
+                logger.error(f"{prefix}{func.__name__} - FAILED ({duration:.2f}s)")
+                raise
+        return wrapper
+    return decorator
+```
+
+**Log output example:**
+```
+[Role Constructor] __init__ - START
+[Task] login - START
+[Task] login - END (3.42s)
+[Task] create_employee - START
+[Task] create_employee - END (5.17s)
+[Role] create_employee - END (8.59s)
+[Test] test_e2e_create_employee_and_assign_task - END (12.31s)
+```
+
+---
+
+## Test Configuration (conftest.py)
+
+Pytest fixtures wire everything together — driver, config, credentials, and BrowserInterface:
+
+```python
+@pytest.fixture
+def driver(request):
+    """New browser driver per test. Supports Chrome and Brave."""
+    headless = request.config.getoption("--headless")
+    browser_type = request.config.getoption("--browser")
+    chromedriver = create_driver(headless=headless, browser=browser_type)
+    try:
+        yield chromedriver
+    finally:
+        chromedriver.quit()
+
+
+@pytest.fixture(scope="session")
+def config(request):
+    """Load environment config (base URL, settings)."""
+    env_id = request.config.getoption("--env")
+    config_path = PROJECT_ROOT / "framework" / "resources" / "config" / "environment_config.json"
+    with open(config_path) as f:
+        environments = json.load(f)
+    yield environments[env_id]
+
+
+@pytest.fixture(scope="session")
+def test_users():
+    """Load test user credentials."""
+    users_path = PROJECT_ROOT / "tests" / "data" / "test_users.json"
+    with open(users_path) as f:
+        yield json.load(f)
+
+
+@pytest.fixture
+def browser(driver, config):
+    """BrowserInterface wrapper with all dependencies."""
+    yield BrowserInterface(driver, config, logger)
+```
+
+**Running tests:**
+```bash
+# Default (Chrome, headed)
+pytest tests/
+
+# Headless Chrome
+pytest tests/ --headless
+
+# Brave browser
+pytest tests/ --browser brave
+
+# Specific environment
+pytest tests/ --env staging
+
+# With HTML report
+pytest tests/ --html=report.html --self-contained-html
+```
+
+---
+
+## The 5-Step QA Workflow
+
+When you invoke `/qa-workflow`, the agent follows a 5-step process with self-enforcing gates at every step:
+
+```
+/qa-workflow
+    │
+Step 1: USER INPUT
+    Receive requirement, URL, credentials
+    Gate: requirement has persona, action, URL
+    │
+Step 2: PRE-FLIGHT
+    Verify URLs accessible, check environment config
+    Gate: all URLs respond, config file valid
+    │
+Step 3: AI PROCESSING
+    Open browser via Playwright MCP, discover page elements
+    Gate: element map captured for each URL
+    │
+Step 4: CONSTRUCTION
+    Read reference files, generate Page Objects, Tasks, Roles, Test
+    Gate: all files follow 5-layer architecture, locators only in POMs
+    │
+Step 5: EXECUTION
+    Run pytest, capture results
+    Gate: test passes or failure triaged with user
+    │
+COMPLETE → /kernel/complete → lesson recorded
+```
+
+### Gate Contract (Self-Enforcement)
+
+Every gate does 6 things:
+
+| # | Action | Description |
+|---|--------|-------------|
+| 1 | **VALIDATE** | Check output against step criteria |
+| 2 | **TEACH** | Record lesson on success or failure |
+| 3 | **LEARN** | Send lesson to /kernel/learn for storage |
+| 4 | **BLOCK** | Prevent next step if validation fails |
+| 5 | **SAVE** | Persist state for next step |
+| 6 | **LOOP** | Retry with teaching if recoverable failure |
+
+### HITL Protocol (Human-In-The-Loop)
+
+On ANY failure, the agent stops and asks:
+
+```
+FAILURE at Step [N]: [brief description]
+
+Error: [exact message]
+Location: [file:line or URL]
+
+HOW SHOULD WE PROCEED?
+1. I'll fix it — tell me what to change
+2. You investigate — show me more context
+3. Skip this — continue without it
+4. Abort — stop workflow entirely
+```
+
+The agent never loops through autonomous fixes. It stops, reports, and waits for your decision.
+
+### Forbidden Patterns
+
+```python
+# NEVER do this in Page Objects:
+import time
+while len(self.browser.get_window_handles()) < 2:
+    time.sleep(0.5)  # NO — ask for BrowserInterface method instead
+
+# CORRECT — use existing BrowserInterface method:
+self.browser.wait_for_new_window(timeout=10)
+```
+
+---
+
+## The Kernel (Enforcement Engine)
+
+The Isagawa Kernel is the enforcement engine that runs inside Claude Code. It's not a linter or a post-hoc checker — it **gates every action in real-time**.
+
+### What It Does
+
+1. **Self-builds** — On first run, the kernel reads your codebase, extracts patterns, and builds its own protocol
+2. **Self-enforces** — Every 10 actions, the hook forces the agent to re-read its protocol (`/kernel/anchor`)
+3. **Self-improves** — After every failure, `/kernel/learn` updates the protocol permanently
+
+### How It Works
+
+```
+session-start → anchor → WORK ──────────────────→ complete
+                   ↑         ↓                       ↑
+                   └─ every 10 actions ←─────────────┘
+                             ↓
+                   failure? → fix → learn (MANDATORY)
+```
+
+### Universal Gate Enforcer
+
+The hook script (`universal-gate-enforcer.py`) intercepts every Write, Edit, and Bash command. It blocks if:
+
+1. **Session not started** — Must invoke `/kernel/session-start` first
+2. **Lesson not recorded** — Test failed but `/kernel/learn` wasn't called
+3. **Protocol not anchored** — Must re-read protocol via `/kernel/anchor`
+4. **Action limit reached** — 10 actions since last anchor, time to re-center
+
+```python
+# Simplified gate logic:
+if not session_state.get('session_started'):
+    BLOCK → "Invoke /kernel/session-start"
+
+if session_state.get('needs_learn'):
+    BLOCK → "Invoke /kernel/learn"
+
+if not domain_state.get('anchored'):
+    BLOCK → "Invoke /kernel/anchor"
+
+if actions_since_anchor > actions_limit:
+    BLOCK → "Invoke /kernel/anchor"
+```
+
+The agent cannot bypass these gates. Every failure becomes a permanent lesson. Every lesson makes the next test better.
+
+---
+
+## How It Works (End-to-End)
 
 1. Describe the persona, URL, and workflow you want to test
-2. The AI discovers page elements and generates code following the 5-layer architecture
+2. The AI discovers page elements via Playwright MCP and generates code following the 5-layer architecture
 3. Tests are executed with human-in-the-loop triage on failure
-4. Every fix makes the system permanently smarter, the same mistake cannot happen again
+4. Every fix makes the system permanently smarter — the same mistake cannot happen again
+
+```
+Input:
+  "As an employee manager, I want to create an employee
+   and assign them a task"
+  URL: https://myapp.com/employees, https://myapp.com/tasks
+
+  │
+  ├── Discover: Playwright MCP opens browser, maps all elements
+  ├── Generate: LoginPage, EmployeesPage, TasksPage (POMs)
+  │             EmployeeManagementTasks, TaskManagementTasks (Tasks)
+  │             EmployeeManager, TaskManager (Roles)
+  │             TestE2ECreateEmployeeAndAssignTask (Test)
+  ├── Execute: pytest runs, 1 passed in 12.31s
+  └── Learn: patterns recorded, next test is better
+```
 
 ---
 
@@ -359,35 +894,20 @@ Edit `framework/resources/config/environment_config.json` to add your applicatio
 
 ### 3. Set up the AI agent
 
-The platform includes a QA domain pack and a pre-configured `CLAUDE.md` that drives the kernel. On first run, the agent reads these instructions, analyzes your codebase, and configures itself to enforce the 5-layer architecture.
-
 ```bash
-claude                    # Start Claude Code in the platform/ directory
-```
-
-Once inside, type `start` or describe any task. The agent will detect a fresh setup and run domain initialization automatically. When it finishes, it will ask you to restart Claude Code to activate enforcement.
-
-```bash
-claude                    # Start again
-> continue                # Agent picks up where it left off — now ready
+claude                    # Start Claude Code in the project directory
+> start                   # Agent runs domain-setup automatically
+                          # --> "Restart Claude Code to activate hooks"
+claude                    # Restart
+> continue                # Agent anchors and is ready
 ```
 
 ### 4. Generate your first test
 
 ```bash
-# Inside Claude Code, invoke the workflow command:
+# Inside Claude Code:
 /qa-workflow
 ```
-
-The agent will ask for your test requirement:
-
-```
-As a [persona], I want to [action] on [URL]
-
-Example: "As a customer, I want to login on https://staging.your-app.com"
-```
-
-It then discovers page elements via Playwright MCP and generates all 5 layers — Page Object, Task, Role, and Test — following every convention automatically.
 
 ### 5. Review generated code
 
@@ -396,8 +916,6 @@ It then discovers page elements via Playwright MCP and generates all 5 layers �
 /pr
 ```
 
-The agent reviews all generated files against the architecture rules — layer separation, naming conventions, decorator usage, locator placement — and reports violations with file and line references. Like a senior SDET code review, done in seconds.
-
 For detailed setup instructions, see [Getting Started](docs/getting-started.md).
 
 ---
@@ -405,34 +923,62 @@ For detailed setup instructions, see [Getting Started](docs/getting-started.md).
 ## Project Structure
 
 ```
-platform/
+platform-selenium/
 ├── .claude/
-│   ├── commands/          # Kernel + QA workflow commands
-│   ├── hooks/             # Gate enforcer + test failure detector
+│   ├── commands/                    # Kernel + QA workflow commands
+│   │   ├── qa-workflow.md           # /qa-workflow — 5-step test generation
+│   │   ├── qa-workflow-dev.md       # /qa-workflow-dev — dev mode
+│   │   └── pr.md                    # /pr — code review against architecture
+│   ├── hooks/                       # Gate enforcer + test failure detector
+│   │   └── universal-gate-enforcer.py
+│   ├── lessons/                     # Learned anti-patterns
+│   │   └── lessons.md
 │   ├── skills/
-│   │   ├── kernel-domain-setup/   # Self-building kernel setup
-│   │   └── qa-management-layer/   # 5-step QA workflow skill
-│   └── settings.json      # Hook configuration
+│   │   ├── kernel-domain-setup/     # Self-building kernel setup
+│   │   └── qa-management-layer/     # 5-step QA workflow skill
+│   │       ├── SKILL.md             # Entry point, rules, reading order
+│   │       ├── workflow.md          # 5-step index with data flow
+│   │       ├── gate-contract.md     # Validation contract (6 responsibilities)
+│   │       └── steps/               # Step-specific criteria
+│   │           ├── step-01.md       # User Input
+│   │           ├── step-02.md       # Pre-flight
+│   │           ├── step-03.md       # AI Processing (element discovery)
+│   │           ├── step-04.md       # Construction (code generation)
+│   │           └── step-05.md       # Execution (pytest run)
+│   └── settings.json                # Hook configuration
 ├── framework/
-│   ├── _reference/         # Canonical code patterns (read-before-write)
-│   │   ├── pages/          # POM reference implementations
-│   │   ├── tasks/          # Task reference implementations
-│   │   ├── roles/          # Role reference implementations
-│   │   └── tests/          # Test reference implementations
+│   ├── _reference/                  # Canonical code patterns (read-before-write)
+│   │   ├── pages/                   # POM reference implementations
+│   │   │   ├── login_page.py
+│   │   │   ├── employees_page.py
+│   │   │   └── tasks_page.py
+│   │   ├── tasks/                   # Task reference implementations
+│   │   │   ├── employee_management_tasks.py
+│   │   │   └── task_management_tasks.py
+│   │   ├── roles/                   # Role reference implementations
+│   │   │   ├── employee_manager.py
+│   │   │   └── task_manager.py
+│   │   └── tests/                   # Test reference implementations
+│   │       └── test_e2e_create_employee_and_assign_task.py
 │   ├── interfaces/
-│   │   └── browser_interface.py   # BrowserInterface (Selenium wrapper)
+│   │   └── browser_interface.py     # BrowserInterface (Selenium wrapper)
 │   └── resources/
-│       ├── chromedriver/   # Driver factory
-│       ├── config/         # Environment configuration
-│       └── utilities/      # Autologger
+│       ├── chromedriver/            # Driver factory
+│       ├── config/                  # Environment configuration
+│       │   └── environment_config.json
+│       └── utilities/               # Autologger decorator
+│           └── autologger.py
 ├── tests/
-│   ├── data/               # Test data (credentials, fixtures)
-│   └── conftest.py         # Pytest fixtures and configuration
-├── docs/                   # Architecture, getting started
-├── .mcp.json               # Playwright MCP server config
-├── CLAUDE.md               # Kernel instructions
-├── CONTRIBUTING.md          # Architecture rules and PR process
-├── LICENSE                  # MIT
+│   ├── data/                        # Test data (credentials, fixtures)
+│   │   └── test_users.json
+│   └── conftest.py                  # Pytest fixtures and configuration
+├── docs/                            # Architecture, getting started
+│   ├── architecture.md
+│   └── getting-started.md
+├── .mcp.json                        # Playwright MCP server config
+├── CLAUDE.md                        # Kernel instructions
+├── CONTRIBUTING.md                  # Architecture rules and PR process
+├── LICENSE                          # MIT
 └── requirements.txt
 ```
 
@@ -442,14 +988,16 @@ platform/
 
 QA is one domain. The Isagawa Kernel supports **any** domain.
 
-The kernel is domain-agnostic, it enforces how AI executes, not just what it generates. What you see here in QA can be applied to:
+The kernel is domain-agnostic — it enforces how AI executes, not just what it generates. What you see here in QA can be applied to:
 
 - Code generation and review
 - Content creation workflows
 - Data pipeline management
+- Healthcare compliance
+- Financial auditing
 - Any process where AI needs to execute correctly, not just generate output
 
-The kernel will be open-sourced separately. Domain packs pre-loaded with patterns, anti-patterns, and quality gates for specific verticals will be available for teams that want to skip the learning curve. The first pack targets vibe coders: ship code like a senior engineer.
+The kernel is available separately. Domain packs — pre-loaded with patterns, anti-patterns, and quality gates for specific verticals — are built by the [Domain Spec Factory](https://github.com/isagawa-co/domain-spec-factory).
 
 ---
 
@@ -467,6 +1015,18 @@ This is AI you can actually delegate QA to.
 
 ---
 
+## Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/qa-workflow` | Run 5-step test generation workflow | Creating new tests |
+| `/qa-workflow-dev` | Run with dev permissions | Development/debugging |
+| `/pr` | Code review against architecture rules | After generating tests |
+| `/kernel/anchor` | Re-center on protocol | Automatic every 10 actions |
+| `/kernel/learn` | Record lesson after failure | After fixing any issue |
+
+---
+
 ## Services
 
 We deliver a highly scalable, maintainable, enterprise-grade test automation framework powered by an AI agent managed by our own enforcement kernel. We build the entire test solution: login credentials, data management, environment configuration, and page object architecture. Your team owns the entire tech stack: a true AI-native test automation framework built on Claude Code. We also train your team to create and maintain test scripts on their own.
@@ -475,16 +1035,18 @@ We deliver a highly scalable, maintainable, enterprise-grade test automation fra
 
 Depending on your needs, the full solution can include:
 
+- Complete 5-layer test architecture configured for your application
 - Login/auth credential management
 - Test data management
-- Environment configuration
-- Page object architecture
+- Environment configuration (dev, staging, production)
+- Page Object library for your application's pages
+- Team training on test creation and maintenance
 
 ### Demo
 
 We'll build working tests on **YOUR** site in 60 minutes. No discovery phase. No proposal. No waiting.
 
-**[alain@isagawa.co](mailto:alain@isagawa.co)** · **[DM on LinkedIn](https://www.linkedin.com/in/alain-ignacio-54b9823)**
+**[alain@isagawa.co](mailto:alain@isagawa.co)** | **[DM on LinkedIn](https://www.linkedin.com/in/alain-ignacio-54b9823)**
 
 ### Pricing
 
@@ -507,4 +1069,4 @@ See [Getting Started](docs/getting-started.md) for detailed setup, [Architecture
 
 ---
 
-<sub>Built with the [Isagawa Kernel](https://github.com/isagawa-qa) self-building, self-improving, safety-first.</sub>
+Built with the [Isagawa Kernel](https://github.com/isagawa-co/isagawa-kernel) — self-building, self-improving, safety-first.
